@@ -1,0 +1,23 @@
+{
+    "configurations": [
+        {
+            "name": "linux-gcc-x64",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/local/gcc-10.2.0/include/c++/11.1.0",
+                "/usr/include/x86_64-linux-gnu/qt5",
+                "${workspaceFolder}/chcpy"
+            ],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "linux-gcc-x64",
+            "compilerArgs": [
+                "-Wall",
+                "-Wextra",
+                "-Wpedantic"
+            ]
+        }
+    ],
+    "version": 4
+}
