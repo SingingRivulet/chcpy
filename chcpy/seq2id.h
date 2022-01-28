@@ -163,6 +163,7 @@ inline midiSearch::generator<melody_t*> melody2seq(const melody_t& melody) {
 template <dict_c T>
 inline void melody2seq(T& self, const melody_t& melody, melody_t& seq) {
     //每四个音符切分，获取id
+    seq.clear();
     for (auto mel4 : melody2seq(melody)) {
         seq.push_back(getIdBySeq(self, *mel4));
     }

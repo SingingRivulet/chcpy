@@ -29,10 +29,10 @@ inline void gen(
     seq2id::melody_t buffer_melody, melody_seq;
     std::vector<int> chord_id;
     chord.clear();
-    for (auto seg : segs) {
 #ifdef CHCPY_DEBUF
-        printf("%d_%s(w=%f) \n", seg.chord_base, seg.chord_name.c_str(), seg.weight);
+    auto melody_it = melody.begin();
 #endif
+    for (auto seg : segs) {
         buffer_melody.clear();
         chord_id.clear();
         int minNote = 9999999;
@@ -45,7 +45,23 @@ inline void gen(
         }
         seq2id::melody2seq(melody_dict, buffer_melody, melody_seq);  //每四个一组
         hmm::predict(model, melody_seq, chord_id);                   //hmm预测
+#ifdef CHCPY_DEBUF
+        printf("%d_%s(w=%f) len(seq)=%d\n",
+               seg.chord_base,
+               seg.chord_name.c_str(),
+               seg.weight,
+               melody_seq.size());
+        printf("旋律\t\t模型输出\t实际结果\n");
+#endif
         for (auto id : chord_id) {
+#ifdef CHCPY_DEBUF
+            int melody_it_count = 0;
+            printf("[");
+            for (; (melody_it != melody.end() && ++melody_it_count <= 4); ++melody_it) {
+                printf("%d ", *melody_it);
+            }
+            printf("]\t");
+#endif
             //转换为和弦
             auto chord14 = chord2id::get(chord_dict, id);        //搜索
             auto note14s = QString(chord14.c_str()).split("-");  //分割
@@ -53,6 +69,9 @@ inline void gen(
             int last = -1;
             std::vector<int> singleChord;
             int maxNote = -1;
+#ifdef CHCPY_DEBUF
+            printf("[");
+#endif
             for (auto note14_str : note14s) {  //遍历
 #ifdef CHCPY_DEBUF
                 printf("%s ", note14_str.toStdString().c_str());
@@ -73,7 +92,7 @@ inline void gen(
                 note -= toneShift;
             }
 #ifdef CHCPY_DEBUF
-            printf("(");
+            printf("]\t(");
             for (auto note : singleChord) {
                 printf("%d ", note);
             }
