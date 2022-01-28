@@ -35,7 +35,11 @@ inline void gen(
 #endif
         buffer_melody.clear();
         chord_id.clear();
+        int minNote = 9999999;
         for (auto note : seg.melody) {  //转换为14进制级数
+            if (note > 0 && note < minNote) {
+                minNote = note;
+            }
             int noteLevel = chcpy::melody2chord::getToneLevelDelta(note, seg.chord_base, 0);
             buffer_melody.push_back(noteLevel);
         }
@@ -48,20 +52,32 @@ inline void gen(
             int B = seg.chord_base;                              //片段根音
             int last = -1;
             std::vector<int> singleChord;
-            for (auto note14_str : note14s) {                             //遍历
+            int maxNote = -1;
+            for (auto note14_str : note14s) {  //遍历
+#ifdef CHCPY_DEBUF
+                printf("%s ", note14_str.toStdString().c_str());
+#endif
                 int A = note14_str.toInt();                               //A的原始值（14进制）
                 int tone = melody2chord::getToneFromLevelDelta(A, B, 0);  //实际音阶（12平均律）
                 while (tone < last) {
                     tone += 12;
                 }
                 last = tone;
+                if (maxNote < tone) {
+                    maxNote = tone;
+                }
                 singleChord.push_back(tone);
             }
+            int toneShift = (1 + (maxNote - minNote) / 12) * 12;
+            for (auto& note : singleChord) {
+                note -= toneShift;
+            }
 #ifdef CHCPY_DEBUF
+            printf("(");
             for (auto note : singleChord) {
                 printf("%d ", note);
             }
-            printf("\n");
+            printf(")\n");
 #endif
             chord.push_back(singleChord);
         }

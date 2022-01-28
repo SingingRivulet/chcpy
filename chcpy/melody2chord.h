@@ -315,6 +315,7 @@ inline std::list<musicSection_t> getMusicSection(
 }
 
 //level与tone
+//level为14进制记谱，相当于把简谱的数字乘以2
 //tone  c   c#  d   d#  e   f   f#  g   g#  a   a#  b
 //tone  0   1   2   3   4   5   6   7   8   9   10  11
 //level 0   1   2   3   4   6   7   8   9   10  11  12
@@ -329,28 +330,12 @@ inline int getToneLevel(int note) {
     return levelList[note % 12] + (note / 12) * 14;
 }
 
-inline int getToneByLevel(int level) {
-    if (level <= 0) {
-        return 0;
-    }
-    const static int levelList[] = {0, 1, 2, 3, 4, 4, 5, 6, 7, 8, 9, 10, 11, 11};
-    return levelList[level % 14] + (level / 14) * 12;
-}
-
 inline int getToneLevel(int note, int baseTone) {
     if (note <= 0) {
         return 0;
     }
     return getToneLevel(note - baseTone);
 }
-
-inline int getToneByLevel(int level, int baseTone) {
-    if (level <= 0) {
-        return 0;
-    }
-    return getToneByLevel(level) + baseTone;
-}
-
 inline int getToneLevelDelta(int A, int B, int baseTone) {
     if (A <= 0 || B <= 0) {
         return -65535;
@@ -359,12 +344,21 @@ inline int getToneLevelDelta(int A, int B, int baseTone) {
 }
 
 inline int getToneFromLevelDelta(int A, int B, int baseTone) {
-    if (A == -65535) {
+    if (A < 0 || B == -65535) {
         return 0;
     }
-    int B_tone = getToneByLevel(B, baseTone);
-    int A_level = B_tone + A;
-    return getToneByLevel(A_level, baseTone);
+    const static int levelList[] = {0, 1, 2, 3, 4, 4, 5, 6, 7, 8, 9, 10, 11, 11};
+    int BinC = B - baseTone;       //将B变换到C调
+    int delta_oct = A / 14;        //音阶
+    int delta_pit = A % 14;        //八度
+    int B14 = getToneLevel(BinC);  //将B变换到14进制
+    int B14_oct = B14 / 14;
+    int B14_pit = B14 % 14;
+    B14_oct += delta_oct;
+    B14_pit += delta_pit;
+    B14_oct += B14_pit / 14;
+    B14_pit = B14_pit % 14;
+    return B14_oct * 12 + levelList[B14_pit] + baseTone;
 }
 
 }  // namespace chcpy::melody2chord
