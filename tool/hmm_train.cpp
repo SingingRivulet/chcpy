@@ -6,7 +6,7 @@ int main() {
     chcpy::chord2id::dict_t chord_dic;
     chcpy::seq2id::load(seq_dic, "../data/melodydict.txt");
     chcpy::chord2id::load(chord_dic, "../data/chorddict.txt");
-    chcpy::hmm::hmm_t model;
+    chcpy::hmm::hmm_train_t model;
     printf("M:%d N:%d\n", seq_dic.index, chord_dic.index);
     chcpy::hmm::init(model, seq_dic.index, chord_dic.index);
     std::vector<int> key, val;

@@ -4,4 +4,4 @@ calcEditDist:calcEditDist.cpp
 	$(CC) calcEditDist.cpp -o calcEditDist
 
 chordGen:chordGen.cpp
-	$(CC) chordGen.cpp -o chordGen
+	$(CC) chordGen.cpp -fopenmp -o chordGen

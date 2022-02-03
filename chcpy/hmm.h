@@ -1,7 +1,9 @@
 #pragma once
 #include <memory.h>
+#include <omp.h>
 #include <functional>
 #include <map>
+#include <mutex>
 #include <numeric>
 #include <sstream>
 #include <string>
@@ -11,20 +13,37 @@ namespace chcpy::hmm {
 
 using melody_t = std::vector<int>;
 template <typename T>
-concept hmm_c = requires(T a) {
+concept hmm_train_c = requires(T a) {
     a.A;
     a.B;
     a.P;
+    a.M;
+    a.N;
 };
-struct hmm_t {
+struct hmm_train_t {
     int32_t M;                          //key数量
     int32_t N;                          //val数量
     std::vector<std::vector<float>> A;  //状态转移矩阵A[vid][vid]，格式[N,N]
     std::vector<std::vector<float>> B;  //发射矩阵，B[vid][kid]，格式[N,M]
     std::vector<float> P;               //初始概率P[vid]，格式[N]
 };
+template <typename T>
+concept hmm_predict_c = requires(T a) {
+    a.A_log;
+    a.B_log;
+    a.P_log;
+    a.M;
+    a.N;
+};
+struct hmm_predict_t {
+    int32_t M;                              //key数量
+    int32_t N;                              //val数量
+    std::vector<std::vector<float>> A_log;  //状态转移矩阵A[vid][vid]，格式[N,N]
+    std::vector<std::vector<float>> B_log;  //发射矩阵，B[vid][kid]，格式[N,M]
+    std::vector<float> P_log;               //初始概率P[vid]，格式[N]
+};
 
-template <hmm_c T>
+template <hmm_train_c T>
 inline void save_text(T& self, const std::string& path) {
     auto fp = fopen(path.c_str(), "w");
     if (fp) {
@@ -58,7 +77,7 @@ inline void save_text(T& self, const std::string& path) {
     }
 }
 
-template <hmm_c T>
+template <hmm_train_c T>
 inline void load_text(T& self, const std::string& path) {
     auto fp = fopen(path.c_str(), "r");
     if (fp) {
@@ -110,12 +129,12 @@ constexpr size_t argmax(ForwardIterator first, ForwardIterator last) {
 
 constexpr float log_safe(float v) {
     if (v == 0) {
-        return log(v + 0.00001);
+        return -std::numeric_limits<float>::infinity();
     }
     return log(v);
 }
 
-template <hmm_c h>
+template <hmm_train_c h>
 inline void init(  //初始化
     h& self,
     int M,
@@ -127,7 +146,59 @@ inline void init(  //初始化
     self.A = std::vector<std::vector<float>>(N, std::vector<float>(N, 0));
 }
 
-template <hmm_c h>
+template <hmm_predict_c h>
+inline void init(  //初始化
+    h& self,
+    int M,
+    int N) {
+    self.M = M;
+    self.N = N;
+    self.P_log = std::vector<float>(N, log_safe(0));
+    self.B_log = std::vector<std::vector<float>>(N, std::vector<float>(M, log_safe(0)));
+    self.A_log = std::vector<std::vector<float>>(N, std::vector<float>(N, log_safe(0)));
+}
+
+template <hmm_predict_c T>
+inline void load_text(T& self, const std::string& path) {
+    auto fp = fopen(path.c_str(), "r");
+    if (fp) {
+        char buf[128];
+        bzero(buf, sizeof(buf));
+        fgets(buf, sizeof(buf), fp);
+        std::istringstream head(buf);
+        int M, N;
+        std::string mat;
+        int x, y;
+        float val;
+        head >> M;
+        head >> N;
+        init(self, M, N);
+        while (!feof(fp)) {
+            bzero(buf, sizeof(buf));
+            fgets(buf, sizeof(buf), fp);
+            std::istringstream line(buf);
+            line >> mat;
+            if (mat == "A") {
+                line >> x;
+                line >> y;
+                line >> val;
+                self.A_log.at(x).at(y) = log_safe(val);
+            } else if (mat == "B") {
+                line >> x;
+                line >> y;
+                line >> val;
+                self.B_log.at(x).at(y) = log_safe(val);
+            } else if (mat == "P") {
+                line >> x;
+                line >> val;
+                self.P_log.at(x) = log_safe(val);
+            }
+        }
+        fclose(fp);
+    }
+}
+
+template <hmm_train_c h>
 inline void train_process(h& self, const std::function<void(std::pair<int, int>&)>& getData) {
     int prev_tag = -1;
     std::pair<int, int> line;
@@ -149,7 +220,7 @@ inline void train_process(h& self, const std::function<void(std::pair<int, int>&
     }
 }
 
-template <hmm_c h>
+template <hmm_train_c h>
 inline void train_end(h& self) {
     //归一化得到概率
     auto P_sum = std::accumulate(self.P.begin(), self.P.end(), 0);
@@ -182,28 +253,57 @@ inline void train_end(h& self) {
     }
 }
 
-template <hmm_c h>
+template <hmm_predict_c h>
 inline void predict(                 //维特比算法，获得最优切分路径
     const h& self,                   //hmm对象
     const melody_t& seq,             //seq须先用melody2seq预处理
     std::vector<int>& best_sequence  //输出
 ) {
+#ifdef CHCPY_DEBUF
+    clock_t startTime, endTime;
+    startTime = clock();  //计时开始
+#endif
     auto T = seq.size();
+    constexpr auto log0 = -std::numeric_limits<float>::infinity();
     std::vector<std::vector<float>> dp(T, std::vector<float>(self.N, 0));
     std::vector<std::vector<int>> ptr(T, std::vector<int>(self.N, 0));
 
+    std::vector<int> lastAvaible;
+
+    std::mutex locker;
+
+#pragma omp parallel for
     for (size_t j = 0; j < self.N; ++j) {
-        dp.at(0).at(j) = log_safe(self.P.at(j)) + log_safe(self.B.at(j).at(seq.at(0)));
+        float startval = self.P_log.at(j) + self.B_log.at(j).at(seq.at(0));
+        dp.at(0).at(j) = startval;
+        if (startval != log0) {
+            locker.lock();
+            lastAvaible.push_back(j);
+            locker.unlock();
+        }
     }
     for (size_t i = 1; i < T; ++i) {
+        auto& dpi = dp.at(i);
+#pragma omp parallel for
         for (size_t j = 0; j < self.N; ++j) {
-            dp.at(i).at(j) = -999999;
-            for (size_t k = 0; k < self.N; ++k) {
-                float score = dp.at(i - 1).at(k) + log_safe(self.A.at(k).at(j)) + log_safe(self.B.at(j).at(seq.at(i)));
-                if (score > dp.at(i).at(j)) {
-                    dp.at(i).at(j) = score;
+            dpi.at(j) = log0;
+            float base = self.B_log.at(j).at(seq.at(i));
+            //for (size_t k = 0; k < self.N; ++k) {
+            for (auto k : lastAvaible) {
+                float score = base + dp.at(i - 1).at(k) + self.A_log.at(k).at(j);
+                if (score != log0 && score > dpi.at(j)) {
+                    dpi.at(j) = score;
                     ptr.at(i).at(j) = k;
                 }
+            }
+        }
+        lastAvaible.clear();
+#pragma omp parallel for
+        for (size_t k = 0; k < self.N; ++k) {
+            if (dpi.at(k) != log0) {
+                locker.lock();
+                lastAvaible.push_back(k);
+                locker.unlock();
             }
         }
     }
@@ -212,6 +312,10 @@ inline void predict(                 //维特比算法，获得最优切分路�
     for (int i = T - 2; i >= 0; --i) {  //这里不能用size_t，否则将导致下溢出，造成死循环
         best_sequence.at(i) = ptr.at(i + 1).at(best_sequence.at(i + 1));
     }
+#ifdef CHCPY_DEBUF
+    endTime = clock();  //计时结束
+    printf("\n用时%f秒\n", (float)(endTime - startTime) / CLOCKS_PER_SEC);
+#endif
 }
 
 }  // namespace chcpy::hmm

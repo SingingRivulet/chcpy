@@ -4,7 +4,7 @@ int main() {
     chcpy::seq2id::dict_t dict_seq;
     chcpy::chord2id::dict_t dict_chord;
     chcpy::melody2chord::chordMap chordmap;
-    chcpy::hmm::hmm_t model;
+    chcpy::hmm::hmm_predict_t model;
 
     chcpy::seq2id::load(dict_seq, "../data/melodydict.txt");
     chcpy::chord2id::load(dict_chord, "../data/chorddict.txt");
