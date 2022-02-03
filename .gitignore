@@ -2,3 +2,9 @@
 data/
 *.out
 *.gch
+tmp/
+test/calcEditDist
+test/chordGen
+tool/listBuilder
+tool/hmm_train
+tool/dict_builder
