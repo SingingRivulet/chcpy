@@ -13,7 +13,7 @@ namespace chcpy::predict {
 template <melody2chord::chord_map_c chord_map_t,
           seq2id::dict_c melody_dict_t,
           chord2id::dict_c chord_dict_t,
-          hmm::hmm_predict_c model_t>
+          typename model_t>
 inline void gen(
     chord_map_t& chord_map,          //和弦匹配表
     melody_dict_t& melody_dict,      //旋律字典

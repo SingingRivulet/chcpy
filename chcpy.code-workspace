@@ -60,7 +60,13 @@
             "compare": "cpp",
             "concepts": "cpp",
             "coroutine": "cpp",
-            "numbers": "cpp"
+            "numbers": "cpp",
+            "condition_variable": "cpp",
+            "mutex": "cpp",
+            "thread": "cpp",
+            "cinttypes": "cpp",
+            "semaphore": "cpp",
+            "stop_token": "cpp"
         },
         "git.ignoreLimitWarning": true
     }
