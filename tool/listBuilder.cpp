@@ -7,11 +7,11 @@ std::string buildChordStr(const std::vector<int>& arr, int baseChord, int baseTo
     if (arr.empty()) {
         return "null";
     }
-    QStringList ch_arr;
+    chcpy::stringlist ch_arr;
     for (auto note : arr) {
-        ch_arr.append(note <= 0 ? "0" : QString::number(chcpy::melody2chord::getToneLevelDelta(note + 120, baseChord, baseTone) % 14));
+        ch_arr.push_back(note <= 0 ? "0" : chcpy::string::number(chcpy::melody2chord::getToneLevelDelta(note + 120, baseChord, baseTone) % 14));
     }
-    return ch_arr.join("-").toStdString();
+    return chcpy::join(ch_arr, "-");
 }
 void process(const char* path, const char* out) {
     chcpy::melody2chord::chordMap chordmap;

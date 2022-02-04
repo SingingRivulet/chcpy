@@ -11,7 +11,7 @@ int main() {
     chcpy::hmm::init(model, seq_dic.index, chord_dic.index);
     std::vector<int> key, val;
     for (auto data : midiSearch::lineReader("../data/2.list")) {
-        QString line = data->c_str();
+        chcpy::string line = data->c_str();
         auto kv = line.split("|");
         auto melody_str = kv.at(0).trimmed().split(" ");
         auto chord = kv.at(1).trimmed().split(" ");
@@ -19,7 +19,7 @@ int main() {
         key.clear();
         val.clear();
         for (auto& it : chord) {
-            int id = chcpy::chord2id::get(chord_dic, it.toStdString());
+            int id = chcpy::chord2id::get(chord_dic, it);
             val.push_back(id);
         }
         for (auto& it : melody_str) {

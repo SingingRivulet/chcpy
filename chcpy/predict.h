@@ -64,7 +64,7 @@ inline void gen(
 #endif
             //转换为和弦
             auto chord14 = chord2id::get(chord_dict, id);        //搜索
-            auto note14s = QString(chord14.c_str()).split("-");  //分割
+            auto note14s = chcpy::string(chord14.c_str()).split("-");  //分割
             int B = seg.chord_base;                              //片段根音
             int last = -1;
             std::vector<int> singleChord;
@@ -74,7 +74,7 @@ inline void gen(
 #endif
             for (auto note14_str : note14s) {  //遍历
 #ifdef CHCPY_DEBUF
-                printf("%s ", note14_str.toStdString().c_str());
+                printf("%s ", note14_str.c_str());
 #endif
                 int A = note14_str.toInt();                               //A的原始值（14进制）
                 int tone = melody2chord::getToneFromLevelDelta(A, B, 0);  //实际音阶（12平均律）

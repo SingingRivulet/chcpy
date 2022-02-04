@@ -1,7 +1,6 @@
 #pragma once
-#include <qt5/QtCore/QString>
-#include <qt5/QtCore/QStringList>
 #include <fstream>
+#include "chcpystring.h"
 #include "generator.h"
 #include "search.h"
 namespace midiSearch {
@@ -19,8 +18,7 @@ inline generator<std::string*> lineReader(const std::string& path) {
     }
 }
 
-inline void str2melody(const QString& ostr, melody_t& melody) {
-    QString str = ostr;
+inline void str2melody(const chcpy::string& str, melody_t& melody) {
     auto notes_arr = str.replace("[", "").replace("]", "").split(",");
     for (auto it : notes_arr) {
         int note = it.toInt();
@@ -28,11 +26,11 @@ inline void str2melody(const QString& ostr, melody_t& melody) {
     }
 }
 
-inline void str2chord(const QString& ostr, chord_t& chords) {
-    QString str = ostr;
-    auto chord_str_array = str.mid(2, str.size() - 4).remove("],").split("[");
+inline void str2chord(const chcpy::string& ostr, chord_t& chords) {
+    chcpy::string str = ostr;
+    auto chord_str_array = str.mid(2, str.size() - 4).replace("],","").split("[");
     for (auto it : chord_str_array) {
-        QStringList arr = it.split(",");
+        chcpy::stringlist arr = it.split(",");
         std::vector<int> chord;
         for (auto n : arr) {
             int chord_note = n.toInt();
@@ -50,7 +48,7 @@ inline generator<std::tuple<music, std::string*> > musicReader_3colume(const std
     for (auto buf : lineReader(path)) {
         try {
             //开始切分字符串
-            QString line = buf->c_str();
+            chcpy::string line = buf->c_str();
             auto line_array = line.simplified().split("|");
             auto name = line_array.at(0);
             auto notes_str = line_array.at(1);
@@ -64,7 +62,7 @@ inline generator<std::tuple<music, std::string*> > musicReader_3colume(const std
             chord_t chords;
             str2chord(chord_str, chords);
 
-            res.name = name.toStdString();
+            res.name = name;
             res.melody = melody;
             res.chord = chords;
             res.relativeMelody = buildRelativeArray(res.melody);
@@ -81,7 +79,7 @@ inline generator<melody_t> musicReader_2colume(const std::string& path) {
     for (auto buf : lineReader(path)) {
         try {
             //开始切分字符串
-            QString line = buf->c_str();
+            chcpy::string line = buf->c_str();
             auto line_array = line.simplified().split("|");
             auto notes_str = line_array.at(0);
 

@@ -1,4 +1,4 @@
-CC = g++ -I/usr/include/x86_64-linux-gnu/qt5 -fcoroutines -fPIC -lQt5Core -std=c++20 -ggdb -I../chcpy ../chcpy/cJSON.c
+CC = g++ -I/usr/include/x86_64-linux-gnu/qt5 -fcoroutines -fPIC -std=c++20 -fconcepts-diagnostics-depth=4 -ggdb -I../chcpy ../chcpy/cJSON.c
 all:calcEditDist chordGen
 
 calcEditDist:calcEditDist.cpp
@@ -6,6 +6,9 @@ calcEditDist:calcEditDist.cpp
 
 chordGen:chordGen.cpp
 	$(CC) chordGen.cpp -fopenmp -o chordGen
+
+chordGen_gpu:chordGen_gpu.cpp
+	$(CC) chordGen_gpu.cpp -lGLESv2 -lEGL -fopenmp -o chordGen_gpu
 
 clean:
 	rm chordGen chordGen.out calcEditDist

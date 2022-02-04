@@ -251,8 +251,6 @@ class hmm_t {
 
 template <typename T>
 concept hmm_c = requires(T a) {
-    a.A_log;
-    a.B_log;
     a.dp_last;
     a.update();
     a.start();
@@ -266,7 +264,7 @@ namespace hmm {
 
 template <gpu::hmm_c h>
 inline void predict(                 //维特比算法，获得最优切分路径
-    const h& gpu,                    //hmm对象
+    h& gpu,                          //hmm对象
     const melody_t& seq,             //seq须先用melody2seq预处理
     std::vector<int>& best_sequence  //输出
 ) {

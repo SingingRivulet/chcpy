@@ -66,7 +66,10 @@
             "thread": "cpp",
             "cinttypes": "cpp",
             "semaphore": "cpp",
-            "stop_token": "cpp"
+            "stop_token": "cpp",
+            "complex": "cpp",
+            "cstring": "cpp",
+            "iomanip": "cpp"
         },
         "git.ignoreLimitWarning": true
     }

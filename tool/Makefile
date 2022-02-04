@@ -1,4 +1,4 @@
-CC = g++ -I/usr/include/x86_64-linux-gnu/qt5 -fcoroutines -fPIC -lQt5Core -std=c++20 -ggdb -I../chcpy ../chcpy/cJSON.c
+CC = g++ -I/usr/include/x86_64-linux-gnu/qt5 -fcoroutines -fPIC -std=c++20 -ggdb -I../chcpy ../chcpy/cJSON.c
 all:listBuilder hmm_train dict_builder 
 
 listBuilder:listBuilder.cpp
