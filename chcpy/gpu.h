@@ -221,26 +221,42 @@ class hmm_t {
 
         dp_last_size = cpu->N;
         dp_last = new float[dp_last_size];
+        for (int i = 0; i < dp_last_size; ++i) {
+            dp_last[i] = 0;
+        }
         glGenBuffers(1, &dp_last_gpu);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, dp_last_gpu);
         glBufferData(GL_SHADER_STORAGE_BUFFER, dp_last_size * sizeof(float), dp_last, GL_STATIC_DRAW);
 
         output_size = cpu->N * 2;
         glGenBuffers(1, &output_gpu);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, output_gpu);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, output_size * sizeof(float), NULL, GL_STATIC_DRAW);
     }
     inline void start() {
     }
     inline void update() {
-        glBufferData(GL_SHADER_STORAGE_BUFFER, dp_last_size * sizeof(float), dp_last, GL_STATIC_DRAW);
     }
     inline void run(GLint seq_i, const std::function<void(float*)>& callback) {
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, A_log_gpu);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, A_log_gpu);
+        CHECK();
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, B_log_gpu);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, B_log_gpu);
+        CHECK();
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, dp_last_gpu);
+        //glBufferData(GL_SHADER_STORAGE_BUFFER, dp_last_size * sizeof(float), dp_last, GL_STATIC_DRAW);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, dp_last_size * sizeof(float), dp_last);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, dp_last_gpu);
+        CHECK();
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, output_gpu);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, output_size * sizeof(float), NULL, GL_STATIC_DRAW);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, output_gpu);
+        CHECK();
+
         glUseProgram(computeProgram);
+        CHECK();
 
         //创建uniform变量
         int gpu_M = glGetUniformLocation(computeProgram, "M");
@@ -256,7 +272,7 @@ class hmm_t {
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, output_gpu);
         CHECK();
         float* pOut = (float*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, output_size * sizeof(float), GL_MAP_READ_BIT);
-        printf("%x\n", pOut);
+        //printf("%x\n", pOut);
         CHECK();
         callback(pOut);
         glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);

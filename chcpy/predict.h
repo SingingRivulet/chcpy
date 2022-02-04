@@ -63,9 +63,9 @@ inline void gen(
             printf("]\t");
 #endif
             //转换为和弦
-            auto chord14 = chord2id::get(chord_dict, id);        //搜索
+            auto chord14 = chord2id::get(chord_dict, id);              //搜索
             auto note14s = chcpy::string(chord14.c_str()).split("-");  //分割
-            int B = seg.chord_base;                              //片段根音
+            int B = seg.chord_base;                                    //片段根音
             int last = -1;
             std::vector<int> singleChord;
             int maxNote = -1;
