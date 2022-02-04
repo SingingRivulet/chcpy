@@ -234,22 +234,15 @@ class hmm_t {
         glBufferData(GL_SHADER_STORAGE_BUFFER, output_size * sizeof(float), NULL, GL_STATIC_DRAW);
     }
     inline void run(GLint seq_i, const std::function<void(float*)>& callback) {
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, A_log_gpu);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, A_log_gpu);
-        CHECK();
 
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, B_log_gpu);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, B_log_gpu);
-        CHECK();
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, dp_last_gpu);
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, dp_last_size * sizeof(float), dp_last);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, dp_last_gpu);
-        CHECK();
 
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, output_gpu);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, output_gpu);
-        CHECK();
 
         glUseProgram(computeProgram);
         CHECK();
