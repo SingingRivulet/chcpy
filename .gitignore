@@ -5,6 +5,7 @@ data/
 tmp/
 test/calcEditDist
 test/chordGen
+test/chordGen_gpu
 tool/listBuilder
 tool/hmm_train
 tool/dict_builder

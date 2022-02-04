@@ -8,12 +8,13 @@
 namespace chcpy {
 namespace gpu {
 
-inline void CHECK() {
-    GLenum err = glGetError();
-    if (err != GL_NO_ERROR) {
-        printf("glGetError returns %d\n", err);
+#define CHECK()                                                            \
+    {                                                                      \
+        GLenum err = glGetError();                                         \
+        if (err != GL_NO_ERROR) {                                          \
+            printf(__FILE__ ":%d glGetError returns %d\n", __LINE__, err); \
+        }                                                                  \
     }
-}
 class GPUContext {
    private:
     EGLContext context;
@@ -111,13 +112,6 @@ class GPUContext {
         }
         return program;
     }
-    inline void setupSSBufferObject(GLuint& ssbo, GLuint index, float* pIn, GLuint count) {
-        glGenBuffers(1, &ssbo);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
-
-        glBufferData(GL_SHADER_STORAGE_BUFFER, count * sizeof(float), pIn, GL_STATIC_DRAW);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, ssbo);
-    }
     inline ~GPUContext() {
         eglDestroyContext(dpy, context);
         eglTerminate(dpy);
@@ -149,11 +143,11 @@ layout(binding = 2) readonly buffer Input2 {
 
 layout(binding = 3) writeonly buffer Output0 {
     float data[];
-} output;
+} output0;
 
 void main(){
     const float infinity = 1. / 0.;//定义无限大常量
-    uint idx = gl_GlobalInvocationID.x;//对应cpu版的j
+    int idx = int(gl_GlobalInvocationID.x);//对应cpu版的j
     float dpi_val = -infinity;
     int ptr_val = 0;
     float base = B_log.data[idx*N + seq_i];
@@ -164,8 +158,8 @@ void main(){
             ptr_val = k;
         }
     }
-    output.data[idx*2] = dpi_val;
-    output.data[idx*2+1] = float(ptr_val);
+    output0.data[idx*2] = dpi_val;
+    output0.data[idx*2+1] = float(ptr_val);
 }
 
 )";
@@ -203,26 +197,49 @@ class hmm_t {
         //创建GPU端变量
         A_log_size = cpu->N * cpu->N;
         A_log = new float[A_log_size];
+        for (int i = 0; i < cpu->N; ++i) {
+            for (int j = 0; j < cpu->N; ++j) {
+                float val = cpu->A_log.at(i).at(j);
+                A_log[i * cpu->N + j] = val;
+            }
+        }
+        glGenBuffers(1, &A_log_gpu);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, A_log_gpu);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, A_log_size * sizeof(float), A_log, GL_STATIC_DRAW);
 
         B_log_size = cpu->N * cpu->M;
         B_log = new float[B_log_size];
+        for (int i = 0; i < cpu->N; ++i) {
+            for (int j = 0; j < cpu->M; ++j) {
+                float val = cpu->B_log.at(i).at(j);
+                B_log[i * cpu->N + j] = val;
+            }
+        }
+        glGenBuffers(1, &B_log_gpu);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, B_log_gpu);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, B_log_size * sizeof(float), B_log, GL_STATIC_DRAW);
 
         dp_last_size = cpu->N;
         dp_last = new float[dp_last_size];
+        glGenBuffers(1, &dp_last_gpu);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, dp_last_gpu);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, dp_last_size * sizeof(float), dp_last, GL_STATIC_DRAW);
 
         output_size = cpu->N * 2;
+        glGenBuffers(1, &output_gpu);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, output_gpu);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, output_size * sizeof(float), NULL, GL_STATIC_DRAW);
     }
     inline void start() {
-        context->setupSSBufferObject(A_log_gpu, 0, A_log, A_log_size);
-        context->setupSSBufferObject(B_log_gpu, 0, B_log, B_log_size);
-        context->setupSSBufferObject(dp_last_gpu, 0, dp_last, dp_last_size);
-        context->setupSSBufferObject(output_gpu, 0, NULL, output_size);
     }
     inline void update() {
         glBufferData(GL_SHADER_STORAGE_BUFFER, dp_last_size * sizeof(float), dp_last, GL_STATIC_DRAW);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, dp_last_gpu);
     }
     inline void run(GLint seq_i, const std::function<void(float*)>& callback) {
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, A_log_gpu);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, B_log_gpu);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, dp_last_gpu);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, output_gpu);
         glUseProgram(computeProgram);
 
         //创建uniform变量
@@ -237,7 +254,10 @@ class hmm_t {
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         CHECK();
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, output_gpu);
+        CHECK();
         float* pOut = (float*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, output_size * sizeof(float), GL_MAP_READ_BIT);
+        printf("%x\n", pOut);
+        CHECK();
         callback(pOut);
         glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
     }
@@ -303,6 +323,7 @@ inline void predict(                 //维特比算法，获得最优切分路�
             for (size_t j = 0; j < self.N; ++j) {
                 float dpi_val = output[j * 2];
                 int ptr_val = output[j * 2 + 1];
+                //printf("%d\n",ptr_val);
                 gpu.dp_last[j] = dpi_val;
                 dpi.at(j) = dpi_val;
                 ptr.at(i).at(j) = ptr_val;
