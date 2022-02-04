@@ -230,10 +230,8 @@ class hmm_t {
 
         output_size = cpu->N * 2;
         glGenBuffers(1, &output_gpu);
-    }
-    inline void start() {
-    }
-    inline void update() {
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, output_gpu);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, output_size * sizeof(float), NULL, GL_STATIC_DRAW);
     }
     inline void run(GLint seq_i, const std::function<void(float*)>& callback) {
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, A_log_gpu);
@@ -245,13 +243,11 @@ class hmm_t {
         CHECK();
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, dp_last_gpu);
-        //glBufferData(GL_SHADER_STORAGE_BUFFER, dp_last_size * sizeof(float), dp_last, GL_STATIC_DRAW);
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, dp_last_size * sizeof(float), dp_last);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, dp_last_gpu);
         CHECK();
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, output_gpu);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, output_size * sizeof(float), NULL, GL_STATIC_DRAW);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, output_gpu);
         CHECK();
 
@@ -269,12 +265,12 @@ class hmm_t {
         glDispatchCompute(cpu->N, 1, 1);  //执行
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         CHECK();
+
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, output_gpu);
-        CHECK();
         float* pOut = (float*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, output_size * sizeof(float), GL_MAP_READ_BIT);
-        //printf("%x\n", pOut);
         CHECK();
         callback(pOut);
+
         glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
     }
     inline ~hmm_t() {
@@ -288,8 +284,6 @@ class hmm_t {
 template <typename T>
 concept hmm_c = requires(T a) {
     a.dp_last;
-    a.update();
-    a.start();
     a.cpu;
     a.run(GLint(), [](float*) {});
 };
@@ -319,7 +313,6 @@ inline void predict(                 //维特比算法，获得最优切分路�
         dp.at(0).at(j) = startval;
         gpu.dp_last[j] = startval;
     }
-    gpu.start();  //初始化gpu
     for (size_t i = 1; i < T; ++i) {
         auto& dpi = dp.at(i);
         /*
@@ -345,7 +338,6 @@ inline void predict(                 //维特比算法，获得最优切分路�
                 ptr.at(i).at(j) = ptr_val;
             }
         });
-        gpu.update();
     }
     best_sequence.resize(T);
     best_sequence.at(T - 1) = argmax(dp.at(T - 1).begin(), dp.at(T - 1).end());

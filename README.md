@@ -1,6 +1,8 @@
 # 基于 hmm 的自动和弦生成工具：
 
-# 使用：
+## 使用：
+
+### CPU 端：
 
 ```c++
     chcpy::seq2id::dict_t dict_seq;//旋律字典
@@ -21,7 +23,24 @@
     }
 ```
 
-# 测试：
+### GPU 端：
+
+GPU 端基于 OpenGL ES 3 的计算着色器。如须使用该功能，在上述代码该位置添加`chcpy::gpu::hmm_t`，将模型复制到 GPU 端
+
+```c++
+    ......
+    chcpy::seq2id::load(dict_seq, "../data/melodydict.txt");//加载旋律字典
+    chcpy::chord2id::load(dict_chord, "../data/chorddict.txt");//加载和弦字典
+    chcpy::hmm::load_text(model, "../data/model");//加载模型
+
+    chcpy::gpu::hmm_t model_gpu(&context, &model);  //将模型复制到gpu端
+    ....
+```
+
+复制完成后，像在 CPU 端一样使用 model_gpu 即可。  
+目前 GPU 有 bug，运行结果和 CPU 端有一定差距，原因未知。
+
+## 测试：
 
 执行`./test/chordGen`可查看效果  
 实际效果：  
