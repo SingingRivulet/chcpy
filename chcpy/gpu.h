@@ -150,7 +150,7 @@ void main(){
     int idx = int(gl_GlobalInvocationID.x);//对应cpu版的j
     float dpi_val = -infinity;
     int ptr_val = 0;
-    float base = B_log.data[idx*N + seq_i];
+    float base = B_log.data[idx*M + seq_i];
     for (int k = 0; k < N; ++k) {
         float score = base + dp_last.data[k] + A_log.data[k*N + idx];
         if (!isinf(score) && score > dpi_val) {
@@ -212,7 +212,7 @@ class hmm_t {
         for (int i = 0; i < cpu->N; ++i) {
             for (int j = 0; j < cpu->M; ++j) {
                 float val = cpu->B_log.at(i).at(j);
-                B_log[i * cpu->N + j] = val;
+                B_log[i * cpu->M + j] = val;
             }
         }
         glGenBuffers(1, &B_log_gpu);

@@ -1,5 +1,5 @@
 CC = g++ -I/usr/include/x86_64-linux-gnu/qt5 -fcoroutines -fPIC -std=c++20 -fconcepts-diagnostics-depth=4 -ggdb -I../chcpy ../chcpy/cJSON.c
-all:calcEditDist chordGen
+all:calcEditDist chordGen chordGen_gpu
 
 calcEditDist:calcEditDist.cpp
 	$(CC) calcEditDist.cpp -o calcEditDist
