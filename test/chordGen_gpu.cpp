@@ -1,5 +1,5 @@
 #define CHCPY_DEBUF
-#include "gpu.h"
+#include "hmm_gpu.h"
 #include "predict.h"
 chcpy::gpu::GPUContext context;  //gpu上下文
 int main() {

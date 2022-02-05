@@ -278,13 +278,14 @@ inline void predict(                 //维特比算法，获得最优切分路�
     }
     for (size_t i = 1; i < T; ++i) {
         auto& dpi = dp.at(i);
+        auto& dp_last = dp.at(i - 1);
 #pragma omp parallel for
         for (size_t j = 0; j < self.N; ++j) {
             dpi.at(j) = log0;
             float base = self.B_log.at(j).at(seq.at(i));
             //for (size_t k = 0; k < self.N; ++k) {
             for (auto k : lastAvaible) {
-                float score = base + dp.at(i - 1).at(k) + self.A_log.at(k).at(j);
+                float score = base + dp_last.at(k) + self.A_log.at(k).at(j);
                 if (score != log0 && score > dpi.at(j)) {
                     dpi.at(j) = score;
                     ptr.at(i).at(j) = k;
