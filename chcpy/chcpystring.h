@@ -68,7 +68,7 @@ class string : public std::string {
         return res;
     }
     inline string trimmed() const {
-        string s;
+        string s = *this;
         if (s.empty()) {
             return s;
         }

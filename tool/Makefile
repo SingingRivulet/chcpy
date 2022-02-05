@@ -7,5 +7,5 @@ hmm_train:hmm_train.cpp
 	$(CC) hmm_train.cpp -o hmm_train
 dict_builder:dict_builder.cpp
 	$(CC) dict_builder.cpp -o dict_builder
-clear:
+clean:
 	rm listBuilder hmm_train dict_builder

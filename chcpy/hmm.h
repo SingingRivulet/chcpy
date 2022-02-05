@@ -1,4 +1,5 @@
 #pragma once
+#include <math.h>
 #include <memory.h>
 #include <omp.h>
 #include <functional>
@@ -8,7 +9,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include "math.h"
+
 namespace chcpy::hmm {
 
 using melody_t = std::vector<int>;
@@ -220,36 +221,29 @@ inline void train_process(h& self, const std::function<void(std::pair<int, int>&
     }
 }
 
+template <typename T>
+inline void normalize(T& a) {
+    auto sum = std::accumulate(a.begin(), a.end(), 0);
+    if (sum != 0) {
+        for (auto& el : a) {
+            el = el / sum;
+        }
+    } else {
+        for (auto& el : a) {
+            el = 0;
+        }
+    }
+}
+
 template <hmm_train_c h>
 inline void train_end(h& self) {
     //归一化得到概率
-    auto P_sum = std::accumulate(self.P.begin(), self.P.end(), 0);
-    for (auto& it : self.P) {
-        it = it / P_sum;
-    }
+    normalize(self.P);
     for (auto& it : self.A) {
-        auto sum = std::accumulate(it.begin(), it.end(), 0);
-        if (sum != 0) {
-            for (auto& el : it) {
-                el = el / sum;
-            }
-        } else {
-            for (auto& el : it) {
-                el = 0;
-            }
-        }
+        normalize(it);
     }
     for (auto& it : self.B) {
-        auto sum = std::accumulate(it.begin(), it.end(), 0);
-        if (sum != 0) {
-            for (auto& el : it) {
-                el = el / sum;
-            }
-        } else {
-            for (auto& el : it) {
-                el = 0;
-            }
-        }
+        normalize(it);
     }
 }
 
