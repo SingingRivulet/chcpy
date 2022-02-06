@@ -131,8 +131,8 @@ void main() {
     }
 
     //开始正式搜索
-    float min_val = -infinity;
-    int min_path = -1;
+    float max_val = -infinity;
+    int max_path = -1;
     int A2_log_index = 0;
     for (int k2 = 0; k2 < N; ++k2) {
         float A2_log_value = -infinity;
@@ -146,13 +146,13 @@ void main() {
             }
         }
         float val = dp_last.data[j + k2 * N] + A2_log_value + B2_log_val;
-        if (val > min_val) {
-            min_val = val;
-            min_path = k2;
+        if (val > max_val) {
+            max_val = val;
+            max_path = k2;
         }
     }
-    output0.data[(j * N + k1) * 2] = min_val;
-    output0.data[(j * N + k1) * 2 + 1] = float(min_path);
+    output0.data[(j * N + k1) * 2] = max_val;
+    output0.data[(j * N + k1) * 2 + 1] = float(max_path);
 }
 
 )";
@@ -402,17 +402,17 @@ inline void predict(                 //维特比算法，获得最优切分路�
         /*
         for (int j = 0; j < self.N; j++) {
             for (int k1 = 0; k1 < self.N; k1++) {
-                float min_val = log0;
-                int min_path = -1;
+                float max_val = log0;
+                int max_path = -1;
                 for (int k2 = 0; k2 < self.N; k2++) {
                     float val = dp_last[k2][j] + self.A2_log(k2, j, k1);
-                    if (val > min_val) {
-                        min_val = val;
-                        min_path = k2;
+                    if (val > max_val) {
+                        max_val = val;
+                        max_path = k2;
                     }
                 }
-                dpi[j][k1] = min_val + self.B2_log(j, k1, num_3);
-                ptr[i][j][k1] = min_path;
+                dpi[j][k1] = max_val + self.B2_log(j, k1, num_3);
+                ptr[i][j][k1] = max_path;
             }
         }
         */
@@ -430,27 +430,27 @@ inline void predict(                 //维特比算法，获得最优切分路�
 
     best_sequence.resize(T);
     //argmax 2d
-    float min_val = log0;
-    int min_path_i = -1;
-    int min_path_j = -1;
+    float max_val = log0;
+    int max_path_i = -1;
+    int max_path_j = -1;
     auto& dpi = dp.at(T - 1);
     for (int i = 0; i < self.N; i++) {
         for (int j = 0; j < self.N; j++) {
-            if (dpi[i][j] < min_val) {
-                min_val = dpi[i][j];
-                min_path_i = i;
-                min_path_j = j;
+            if (dpi[i][j] > max_val) {
+                max_val = dpi[i][j];
+                max_path_i = i;
+                max_path_j = j;
             }
         }
     }
-    best_sequence.at(T - 1) = min_path_j;
-    best_sequence.at(T - 2) = min_path_i;
+    best_sequence.at(T - 1) = max_path_j;
+    best_sequence.at(T - 2) = max_path_i;
 
     for (int t = T - 1; t > 1; t--) {
-        int min_path_k = ptr[t][min_path_i][min_path_j];
-        best_sequence.at(t - 2) = min_path_k;
-        min_path_j = min_path_i;
-        min_path_i = min_path_k;
+        int max_path_k = ptr[t][max_path_i][max_path_j];
+        best_sequence.at(t - 2) = max_path_k;
+        max_path_j = max_path_i;
+        max_path_i = max_path_k;
     }
 }
 
