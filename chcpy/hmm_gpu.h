@@ -164,6 +164,7 @@ concept hmm_c = requires(T a) {
     a.dp_last;
     a.cpu;
     a.run(GLint(), [](float*) {});
+    chcpy::hmm::hmm_predict_t(*a.cpu);
 };
 }  // namespace gpu
 

@@ -445,7 +445,7 @@ inline void train_end(h& self) {
 
 //此方法很慢，慎用
 template <hmmv3_predict_c h>
-[[depracted]] inline void predict(   //维特比算法，获得最优切分路径
+inline void predict(                 //维特比算法，获得最优切分路径
     const h& self,                   //hmm对象
     const melody_t& seq,             //seq须先用melody2seq预处理
     std::vector<int>& best_sequence  //输出

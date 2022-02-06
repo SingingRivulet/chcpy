@@ -69,7 +69,9 @@
             "stop_token": "cpp",
             "complex": "cpp",
             "cstring": "cpp",
-            "iomanip": "cpp"
+            "iomanip": "cpp",
+            "stdlib.h": "c",
+            "*.glsl": "c"
         },
         "git.ignoreLimitWarning": true
     }
