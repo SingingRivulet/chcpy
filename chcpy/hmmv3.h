@@ -13,14 +13,176 @@
 
 namespace chcpy::hmm {
 
+struct SMat3D_predict {
+    std::map<std::tuple<short, short, short>, float> data{};
+    float defaultValue = 0;
+    inline float operator()(short x, short y, short z) const {
+        auto it = data.find(std::make_tuple(x, y, z));
+        if (it != data.end()) {
+            return it->second;
+        }
+        return defaultValue;
+    }
+    inline void set(short x, short y, short z, float v) {
+        data[std::make_tuple(x, y, z)] = v;
+    }
+    inline void add(short x, short y, short z, float v) {
+        auto it = data.find(std::make_tuple(x, y, z));
+        if (it != data.end()) {
+            it->second += v;
+        } else {
+            data[std::make_tuple(x, y, z)] = defaultValue + v;
+        }
+    }
+    inline void init(float def) {
+        data.clear();
+        defaultValue = def;
+    }
+};
+
+struct SMat2D_predict {
+    std::map<std::tuple<short, short>, float> data{};
+    float defaultValue = 0;
+    inline float operator()(short x, short y) const {
+        auto it = data.find(std::make_tuple(x, y));
+        if (it != data.end()) {
+            return it->second;
+        }
+        return defaultValue;
+    }
+    inline void set(short x, short y, float v) {
+        data[std::make_tuple(x, y)] = v;
+    }
+    inline void add(short x, short y, float v) {
+        auto it = data.find(std::make_tuple(x, y));
+        if (it != data.end()) {
+            it->second += v;
+        } else {
+            data[std::make_tuple(x, y)] = defaultValue + v;
+        }
+    }
+    inline void init(float def) {
+        data.clear();
+        defaultValue = def;
+    }
+};
+
+struct SMat3D_train {
+    std::map<short, std::map<short, std::map<short, float>>> data{};
+    float defaultValue = 0;
+    inline float operator()(short x, short y, short z) const {
+        auto it_x = data.find(x);
+        if (it_x != data.end()) {
+            auto it_y = it_x->second.find(y);
+            if (it_y != it_x->second.end()) {
+                auto it_z = it_y->second.find(z);
+                if (it_z != it_y->second.end()) {
+                    return it_z->second;
+                }
+            }
+        }
+        return defaultValue;
+    }
+    inline void set(short x, short y, short z, float v) {
+        data[x][y][z] = v;
+    }
+    inline void add(short x, short y, short z, float v) {
+        auto it_x = data.find(x);
+        if (it_x != data.end()) {
+            auto it_y = it_x->second.find(y);
+            if (it_y != it_x->second.end()) {
+                auto it_z = it_y->second.find(z);
+                if (it_z != it_y->second.end()) {
+                    it_z->second += v;
+                    return;
+                }
+            }
+        }
+        data[x][y][z] = defaultValue + v;
+    }
+    inline void init(float def) {
+        data.clear();
+        defaultValue = def;
+    }
+    inline void normalize() {
+        for (auto& it_x : data) {
+            for (auto& it_y : it_x.second) {
+                float sum = 0.0;
+                for (auto& it_z : it_y.second) {
+                    sum += it_z.second;
+                }
+                if (sum == 0) {
+                    for (auto& it_z : it_y.second) {
+                        it_z.second = 0.0;
+                    }
+                } else {
+                    for (auto& it_z : it_y.second) {
+                        it_z.second /= sum;
+                    }
+                }
+            }
+        }
+    }
+};
+
+struct SMat2D_train {
+    std::map<short, std::map<short, float>> data{};
+    float defaultValue = 0;
+    inline float operator()(short x, short y) const {
+        auto it_x = data.find(x);
+        if (it_x != data.end()) {
+            auto it_y = it_x->second.find(y);
+            if (it_y != it_x->second.end()) {
+                return it_y->second;
+            }
+        }
+        return defaultValue;
+    }
+    inline void set(short x, short y, float v) {
+        data[x][y] = v;
+    }
+    inline void add(short x, short y, float v) {
+        auto it_x = data.find(x);
+        if (it_x != data.end()) {
+            auto it_y = it_x->second.find(y);
+            if (it_y != it_x->second.end()) {
+                it_y->second += v;
+                return;
+            }
+        }
+        data[x][y] = defaultValue + v;
+    }
+    inline void init(float def) {
+        data.clear();
+        defaultValue = def;
+    }
+    inline void normalize() {
+        for (auto& it_x : data) {
+            float sum = 0.0;
+            for (auto& it_y : it_x.second) {
+                sum += it_y.second;
+            }
+            if (sum == 0) {
+                for (auto& it_y : it_x.second) {
+                    it_y.second = 0.0;
+                }
+            } else {
+                for (auto& it_y : it_x.second) {
+                    it_y.second /= sum;
+                }
+            }
+        }
+    }
+};
+
 struct hmmv3_train_t {
-    int32_t M;                                        //key数量
-    int32_t N;                                        //val数量
-    std::vector<std::vector<float>> A1;               //状态转移矩阵A[vid][vid]，格式[N,N]
-    std::vector<std::vector<std::vector<float>>> A2;  //状态转移矩阵A[vid][vid][vid]，格式[N,N,N]
-    std::vector<std::vector<float>> B1;               //发射矩阵，B[vid][kid]，格式[N,M]
-    std::vector<std::vector<std::vector<float>>> B2;  //发射矩阵，B[vid][vid][kid]，格式[N,N,M]
-    std::vector<float> P;                             //初始概率P[vid]，格式[N]
+    int32_t M;             //key数量
+    int32_t N;             //val数量
+    SMat2D_train A1;       //状态转移矩阵A[vid][vid]，格式[N,N]
+    SMat3D_train A2;       //状态转移矩阵A[vid][vid][vid]，格式[N,N,N]
+    SMat2D_train B1;       //发射矩阵，B[vid][kid]，格式[N,M]
+    SMat3D_train B2;       //发射矩阵，B[vid][vid][kid]，格式[N,N,M]
+    std::vector<float> P;  //初始概率P[vid]，格式[N]
 };
 template <typename T>
 concept hmmv3_train_c = requires(T a) {
@@ -34,13 +196,13 @@ concept hmmv3_train_c = requires(T a) {
 };
 
 struct hmmv3_predict_t {
-    int32_t M;                                            //key数量
-    int32_t N;                                            //val数量
-    std::vector<std::vector<float>> A1_log;               //状态转移矩阵A[vid][vid]，格式[N,N]
-    std::vector<std::vector<std::vector<float>>> A2_log;  //状态转移矩阵A[vid][vid][vid]，格式[N,N,N]
-    std::vector<std::vector<float>> B1_log;               //发射矩阵，B[vid][kid]，格式[N,M]
-    std::vector<std::vector<std::vector<float>>> B2_log;  //发射矩阵，B[vid][vid][kid]，格式[N,N,M]
-    std::vector<float> P_log;                             //初始概率P[vid]，格式[N]
+    int32_t M;                 //key数量
+    int32_t N;                 //val数量
+    SMat2D_predict A1_log;     //状态转移矩阵A[vid][vid]，格式[N,N]
+    SMat3D_predict A2_log;     //状态转移矩阵A[vid][vid][vid]，格式[N,N,N]
+    SMat2D_predict B1_log;     //发射矩阵，B[vid][kid]，格式[N,M]
+    SMat3D_predict B2_log;     //发射矩阵，B[vid][vid][kid]，格式[N,N,M]
+    std::vector<float> P_log;  //初始概率P[vid]，格式[N]
 };
 template <typename T>
 concept hmmv3_predict_c = requires(T a) {
@@ -61,7 +223,7 @@ inline void save_text(T& self, const std::string& path) {
         //A1
         for (int i = 0; i < self.N; ++i) {
             for (int j = 0; j < self.N; ++j) {
-                float val = self.A1.at(i).at(j);
+                float val = self.A1(i, j);
                 if (val != 0.0f) {
                     fprintf(fp, "A %d %d %f\n", i, j, val);
                 }
@@ -71,7 +233,7 @@ inline void save_text(T& self, const std::string& path) {
         for (int i = 0; i < self.N; ++i) {
             for (int j = 0; j < self.N; ++j) {
                 for (int k = 0; k < self.N; ++k) {
-                    float val = self.A2.at(i).at(j).at(k);
+                    float val = self.A2(i, j, k);
                     if (val != 0.0f) {
                         fprintf(fp, "a %d %d %d %f\n", i, j, k, val);
                     }
@@ -81,7 +243,7 @@ inline void save_text(T& self, const std::string& path) {
         //B1
         for (int i = 0; i < self.N; ++i) {
             for (int j = 0; j < self.M; ++j) {
-                float val = self.B1.at(i).at(j);
+                float val = self.B1(i, j);
                 if (val != 0.0f) {
                     fprintf(fp, "B %d %d %f\n", i, j, val);
                 }
@@ -91,7 +253,7 @@ inline void save_text(T& self, const std::string& path) {
         for (int i = 0; i < self.N; ++i) {
             for (int j = 0; j < self.N; ++j) {
                 for (int k = 0; k < self.M; ++k) {
-                    float val = self.B2.at(i).at(j).at(k);
+                    float val = self.B2(i, j, k);
                     if (val != 0.0f) {
                         fprintf(fp, "b %d %d %d %f\n", i, j, k, val);
                     }
@@ -117,10 +279,10 @@ inline void init(  //初始化
     self.M = M;
     self.N = N;
     self.P = std::vector<float>(N, 0);
-    self.A1 = std::vector<std::vector<float>>(N, std::vector<float>(N, 0));
-    self.A2 = std::vector<std::vector<std::vector<float>>>(N, std::vector<std::vector<float>>(N, std::vector<float>(N, 0)));
-    self.B1 = std::vector<std::vector<float>>(N, std::vector<float>(M, 0));
-    self.B2 = std::vector<std::vector<std::vector<float>>>(N, std::vector<std::vector<float>>(N, std::vector<float>(M, 0)));
+    self.A1.init(0);
+    self.A2.init(0);
+    self.B1.init(0);
+    self.B2.init(0);
 }
 
 template <hmmv3_predict_c h>
@@ -131,10 +293,10 @@ inline void init(  //初始化
     self.M = M;
     self.N = N;
     self.P_log = std::vector<float>(N, log_safe(0));
-    self.A1_log = std::vector<std::vector<float>>(N, std::vector<float>(N, log_safe(0)));
-    self.A2_log = std::vector<std::vector<std::vector<float>>>(N, std::vector<std::vector<float>>(N, std::vector<float>(N, log_safe(0))));
-    self.B1_log = std::vector<std::vector<float>>(N, std::vector<float>(M, log_safe(0)));
-    self.B2_log = std::vector<std::vector<std::vector<float>>>(N, std::vector<std::vector<float>>(N, std::vector<float>(M, log_safe(0))));
+    self.A1_log.init(log_safe(0));
+    self.A2_log.init(log_safe(0));
+    self.B1_log.init(log_safe(0));
+    self.B2_log.init(log_safe(0));
 }
 
 template <hmmv3_train_c T>
@@ -161,24 +323,24 @@ inline void load_text(T& self, const std::string& path) {
                 line >> x;
                 line >> y;
                 line >> val;
-                self.A1.at(x).at(y) = val;
+                self.A1.set(x, y, val);
             } else if (mat == "B") {
                 line >> x;
                 line >> y;
                 line >> val;
-                self.B1.at(x).at(y) = val;
+                self.B1.set(x, y, val);
             } else if (mat == "a") {
                 line >> x;
                 line >> y;
                 line >> z;
                 line >> val;
-                self.A2.at(x).at(y).at(z) = val;
+                self.A2.set(x, y, z, val);
             } else if (mat == "b") {
                 line >> x;
                 line >> y;
                 line >> z;
                 line >> val;
-                self.B2.at(x).at(y).at(z) = val;
+                self.B2.set(x, y, z, val);
             } else if (mat == "P") {
                 line >> x;
                 line >> val;
@@ -213,28 +375,28 @@ inline void load_text(T& self, const std::string& path) {
                 line >> x;
                 line >> y;
                 line >> val;
-                self.A1.at(x).at(y) = log_safe(val);
+                self.A1_log.set(x, y, log_safe(val));
             } else if (mat == "B") {
                 line >> x;
                 line >> y;
                 line >> val;
-                self.B1.at(x).at(y) = log_safe(val);
+                self.B1_log.set(x, y, log_safe(val));
             } else if (mat == "a") {
                 line >> x;
                 line >> y;
                 line >> z;
                 line >> val;
-                self.A2.at(x).at(y).at(z) = log_safe(val);
+                self.A2_log.set(x, y, z, log_safe(val));
             } else if (mat == "b") {
                 line >> x;
                 line >> y;
                 line >> z;
                 line >> val;
-                self.B2.at(x).at(y).at(z) = log_safe(val);
+                self.B2_log.set(x, y, z, log_safe(val));
             } else if (mat == "P") {
                 line >> x;
                 line >> val;
-                self.P.at(x) = log_safe(val);
+                self.P_log.at(x) = log_safe(val);
             }
         }
         fclose(fp);
@@ -256,16 +418,16 @@ inline void train_process(h& self, const std::function<void(std::pair<int, int>&
         }
         if (prev2_tag < 0 || prev2_tag >= self.N) {
             self.P[tagId] += 1;
-            self.B1[tagId][wordId] += 1;
-            self.B2[tagId][tagId][wordId] += 1;
+            self.B1.add(tagId, wordId, 1);
+            self.B2.add(tagId, tagId, wordId, 1);
         } else if (prev1_tag < 0 || prev1_tag >= self.N) {
-            self.A1[prev1_tag][tagId] += 1;
-            self.B1[tagId][wordId] += 1;
+            self.A1.add(prev1_tag, tagId, 1);
+            self.B1.add(tagId, wordId, 1);
         } else {
-            self.A1[prev1_tag][tagId] += 1;
-            self.A2[prev2_tag][prev1_tag][tagId] += 1;
-            self.B1[tagId][wordId] += 1;
-            self.B2[prev1_tag][tagId][wordId] += 1;
+            self.A1.add(prev1_tag, tagId, 1);
+            self.A2.add(prev2_tag, prev1_tag, tagId, 1);
+            self.B1.add(tagId, wordId, 1);
+            self.B2.add(prev1_tag, tagId, wordId, 1);
         }
         prev2_tag = prev1_tag;
         prev1_tag = tagId;
@@ -275,22 +437,10 @@ inline void train_process(h& self, const std::function<void(std::pair<int, int>&
 template <hmmv3_train_c h>
 inline void train_end(h& self) {
     normalize(self.P);
-    for (auto& it : self.A1) {
-        normalize(it);
-    }
-    for (auto& it1 : self.A2) {
-        for (auto& it : it1) {
-            normalize(it);
-        }
-    }
-    for (auto& it : self.B1) {
-        normalize(it);
-    }
-    for (auto& it1 : self.B2) {
-        for (auto& it : it1) {
-            normalize(it);
-        }
-    }
+    self.A1.normalize();
+    self.A2.normalize();
+    self.B1.normalize();
+    self.B2.normalize();
 }
 
 //此方法很慢，慎用
@@ -309,8 +459,8 @@ template <hmmv3_predict_c h>
 #pragma omp parallel for
     for (int x = 0; x < self.N; x++) {
         for (int y = 0; y < self.N; y++) {
-            float val = self.P_log[x] + self.B1_log[x][seq.at(0)] +
-                        self.A1_log[x][y] + self.B2_log[x][y][seq.at(1)];
+            float val = self.P_log.at(x) + self.B1_log(x, seq.at(0)) +
+                        self.A1_log(x, y) + self.B2_log(x, y, seq.at(1));
             dp[1][x][y] = val;
             ptr[1][x][y] = -1;
         }
@@ -327,13 +477,13 @@ template <hmmv3_predict_c h>
                 float min_val = log0;
                 int min_path = -1;
                 for (int k2 = 0; k2 < self.N; k2++) {
-                    float val = dp_last[k2][j] + self.A2_log[k2][j][k1];
+                    float val = dp_last[k2][j] + self.A2_log(k2, j, k1);
                     if (val > min_val) {
                         min_val = val;
                         min_path = k2;
                     }
                 }
-                dpi[j][k1] = min_val + self.B2_log[j][k1][num_3];
+                dpi[j][k1] = min_val + self.B2_log(j, k1, num_3);
                 ptr[i][j][k1] = min_path;
             }
         }
