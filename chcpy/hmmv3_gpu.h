@@ -62,6 +62,9 @@ int mergeInt16(int x, int y) {
 }
 
 void main() {
+    if(A2_len==0 || B2_len==0){
+        return;
+    }
     const float infinity = 1. / 0.;  //定义无限大常量
     int j = int(gl_GlobalInvocationID.x);
     int k1 = int(gl_GlobalInvocationID.y);
@@ -83,11 +86,13 @@ void main() {
     bool A2_haveValue;
     int A2_begin = A2_log_ptr_yz.data[ptr_A2_yz * 3 + 1];
     int A2_num = A2_log_ptr_yz.data[ptr_A2_yz * 3 + 2];
-    if (A2_log_ptr_yz.data[ptr_A2_yz * 3] == j_k1) {
-        A2_haveValue = true;
-    } else {
-        A2_haveValue = false;
-    }
+
+    //if (A2_log_ptr_yz.data[ptr_A2_yz * 3] == j_k1) {
+    //    A2_haveValue = true;
+    //} else {
+    //    A2_haveValue = false;
+    //}
+    A2_haveValue = (A2_log_ptr_yz.data[ptr_A2_yz * 3] == j_k1);
 
     //定位B2_log
     int ptr_B2_xy = 0;
@@ -102,11 +107,12 @@ void main() {
     bool B2_haveValue;
     int B2_begin = B2_log_ptr_xy.data[ptr_B2_xy * 3 + 1];
     int B2_num = B2_log_ptr_xy.data[ptr_B2_xy * 3 + 2];
-    if (B2_log_ptr_xy.data[ptr_B2_xy * 3] == j_k1) {
-        B2_haveValue = true;
-    } else {
-        B2_haveValue = false;
-    }
+    //if (B2_log_ptr_xy.data[ptr_B2_xy * 3] == j_k1) {
+    //    B2_haveValue = true;
+    //} else {
+    //    B2_haveValue = false;
+    //}
+    B2_haveValue = (B2_log_ptr_xy.data[ptr_B2_xy * 3] == j_k1);
     // B2进一步查找
     int ptr_B2_z = 0;
     int ptr_B2_z_move = B2_num;
@@ -376,7 +382,7 @@ inline void predict(                 //维特比算法，获得最优切分路�
     constexpr auto log0 = -std::numeric_limits<float>::infinity();
 
     std::vector<std::vector<std::vector<float>>> dp(T, std::vector<std::vector<float>>(self.N, std::vector<float>(self.N, log0)));
-    std::vector<std::vector<std::vector<float>>> ptr(T, std::vector<std::vector<float>>(self.N, std::vector<float>(self.N, 0)));
+    std::vector<std::vector<std::vector<int>>> ptr(T, std::vector<std::vector<int>>(self.N, std::vector<int>(self.N, 0)));
 
 #pragma omp parallel for
     for (int x = 0; x < self.N; x++) {
@@ -424,7 +430,7 @@ inline void predict(                 //维特比算法，获得最优切分路�
 
     best_sequence.resize(T);
     //argmax 2d
-    float min_val = 100000.0;
+    float min_val = log0;
     int min_path_i = -1;
     int min_path_j = -1;
     auto& dpi = dp.at(T - 1);
@@ -447,6 +453,6 @@ inline void predict(                 //维特比算法，获得最优切分路�
         min_path_i = min_path_k;
     }
 }
-}  // namespace hmm
 
+}  // namespace hmm
 }  // namespace chcpy

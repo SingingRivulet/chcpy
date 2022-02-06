@@ -491,7 +491,7 @@ inline void predict(                 //维特比算法，获得最优切分路�
 
     best_sequence.resize(T);
     //argmax 2d
-    float min_val = 100000.0;
+    float min_val = log0;
     int min_path_i = -1;
     int min_path_j = -1;
     auto& dpi = dp.at(T - 1);
