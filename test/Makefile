@@ -10,5 +10,8 @@ chordGen:chordGen.cpp
 chordGen_gpu:chordGen_gpu.cpp
 	$(CC) chordGen_gpu.cpp -lGLESv2 -lEGL -fopenmp -o chordGen_gpu
 
+chordGenv3_gpu:chordGenv3_gpu.cpp
+	$(CC) chordGenv3_gpu.cpp -lGLESv2 -lEGL -fopenmp -o chordGenv3_gpu
+
 clean:
-	rm chordGen chordGen.out calcEditDist
+	-rm chordGen chordGen.out calcEditDist chordGenv3_gpu chordGen_gpu

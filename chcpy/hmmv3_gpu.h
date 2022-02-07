@@ -138,10 +138,10 @@ void main() {
         float A2_log_value = -infinity;
         //搜索A2
         if (A2_haveValue) {
-            if (A2_log_ptr_x[A2_begin + A2_log_index] < k2) {
+            if (A2_log_ptr_x.data[A2_begin + A2_log_index] < k2) {
                 A2_log_index += clamp(A2_log_index + 1, 0, max(A2_num - 1, 0));
-            } else if (A2_log_ptr_x[A2_begin + A2_log_index] == k2) {
-                A2_log_value = A2_log[A2_begin + A2_log_index];
+            } else if (A2_log_ptr_x.data[A2_begin + A2_log_index] == k2) {
+                A2_log_value = A2_log.data[A2_begin + A2_log_index];
                 A2_log_index += clamp(A2_log_index + 1, 0, max(A2_num - 1, 0));
             }
         }
@@ -165,18 +165,18 @@ inline int mergeInt16(int x, int y) {
 class hmmv3_t {
    private:
     //稀疏矩阵A2
-    std::vector<int> A2_log_ptr_yz;
+    std::vector<GLint> A2_log_ptr_yz;
     GLuint A2_log_ptr_yz_gpu;
-    std::vector<int> A2_log_ptr_x;
+    std::vector<GLint> A2_log_ptr_x;
     GLuint A2_log_ptr_x_gpu;
     std::vector<float> A2_log;
     GLuint A2_log_gpu;
     int A2_len;
 
     //稀疏矩阵B2
-    std::vector<int> B2_log_ptr_xy;
+    std::vector<GLint> B2_log_ptr_xy;
     GLuint B2_log_ptr_xy_gpu;
-    std::vector<int> B2_log_ptr_z;
+    std::vector<GLint> B2_log_ptr_z;
     GLuint B2_log_ptr_z_gpu;
     std::vector<float> B2_log;
     GLuint B2_log_gpu;
@@ -244,7 +244,7 @@ class hmmv3_t {
             m[xy][z] = it.second;
         }
         int index = 0;
-        A2_len = m.size();
+        B2_len = m.size();
         for (auto& it_xy : m) {
             B2_log_ptr_xy.push_back(it_xy.first);
             B2_log_ptr_xy.push_back(index);
@@ -295,6 +295,7 @@ class hmmv3_t {
 
         genA2GPUBuffer();
         genB2GPUBuffer();
+        printf("A2_len=%d B2_len=%d\n", A2_len, B2_len);
 
         dp_last_size = cpu->N * cpu->N;
         dp_last = new float[dp_last_size];
@@ -381,16 +382,16 @@ inline void predict(                 //维特比算法，获得最优切分路�
     auto T = seq.size();
     constexpr auto log0 = -std::numeric_limits<float>::infinity();
 
-    std::vector<std::vector<std::vector<float>>> dp(T, std::vector<std::vector<float>>(self.N, std::vector<float>(self.N, log0)));
-    std::vector<std::vector<std::vector<int>>> ptr(T, std::vector<std::vector<int>>(self.N, std::vector<int>(self.N, 0)));
+    std::vector<SMat2D_predict> dp(T, SMat2D_predict(log0));
+    std::vector<SMat2D_predict> ptr(T, SMat2D_predict(-1));
 
 #pragma omp parallel for
     for (int x = 0; x < self.N; x++) {
         for (int y = 0; y < self.N; y++) {
             float val = self.P_log.at(x) + self.B1_log(x, seq.at(0)) +
                         self.A1_log(x, y) + self.B2_log(x, y, seq.at(1));
-            dp[1][x][y] = val;
-            ptr[1][x][y] = -1;
+            //dp[1][x][y] = val;
+            //ptr[1][x][y] = -1;
             gpu.dp_last[x * self.N + y] = val;
         }
     }
@@ -420,8 +421,16 @@ inline void predict(                 //维特比算法，获得最优切分路�
             for (int j = 0; j < self.N; j++) {
                 for (int k1 = 0; k1 < self.N; k1++) {
                     float dpival = output[(j * self.N + k1) * 2];
-                    dpi[j][k1] = dpival;
-                    ptr[i][j][k1] = output[(j * self.N + k1) * 2 + 1];
+                    int ptrval = output[(j * self.N + k1) * 2 + 1];
+                    if (dpival != log0) {
+                        dpi.set(j, k1, dpival);
+                    }
+                    if (ptrval != -1) {
+                        ptr[i].set(j, k1, ptrval);
+                    }
+                    //if (ptrval != 0) {
+                    //    printf("%d %d %d %d\n", i, j, k1, ptrval);
+                    //}
                     gpu.dp_last[j * self.N + k1] = dpival;
                 }
             }
@@ -436,8 +445,8 @@ inline void predict(                 //维特比算法，获得最优切分路�
     auto& dpi = dp.at(T - 1);
     for (int i = 0; i < self.N; i++) {
         for (int j = 0; j < self.N; j++) {
-            if (dpi[i][j] > max_val) {
-                max_val = dpi[i][j];
+            if (dpi(i, j) > max_val) {
+                max_val = dpi(i, j);
                 max_path_i = i;
                 max_path_j = j;
             }
@@ -447,7 +456,7 @@ inline void predict(                 //维特比算法，获得最优切分路�
     best_sequence.at(T - 2) = max_path_i;
 
     for (int t = T - 1; t > 1; t--) {
-        int max_path_k = ptr[t][max_path_i][max_path_j];
+        int max_path_k = ptr[t](max_path_i, max_path_j);
         best_sequence.at(t - 2) = max_path_k;
         max_path_j = max_path_i;
         max_path_i = max_path_k;

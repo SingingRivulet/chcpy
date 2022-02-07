@@ -5,7 +5,9 @@ listBuilder:listBuilder.cpp
 	$(CC) listBuilder.cpp -o listBuilder
 hmm_train:hmm_train.cpp
 	$(CC) hmm_train.cpp -o hmm_train
+hmmv3_train:hmmv3_train.cpp
+	$(CC) hmmv3_train.cpp -o hmmv3_train
 dict_builder:dict_builder.cpp
 	$(CC) dict_builder.cpp -o dict_builder
 clean:
-	rm listBuilder hmm_train dict_builder
+	-rm listBuilder hmm_train dict_builder hmmv3_train

@@ -14,6 +14,10 @@
 namespace chcpy::hmm {
 
 struct SMat3D_predict {
+    inline SMat3D_predict(float v) {
+        init(v);
+    }
+    inline SMat3D_predict() = default;
     std::map<std::tuple<short, short, short>, float> data{};
     float defaultValue = 0;
     inline float operator()(short x, short y, short z) const {
@@ -41,6 +45,10 @@ struct SMat3D_predict {
 };
 
 struct SMat2D_predict {
+    inline SMat2D_predict(float v) {
+        init(v);
+    }
+    inline SMat2D_predict() = default;
     std::map<std::tuple<short, short>, float> data{};
     float defaultValue = 0;
     inline float operator()(short x, short y) const {
@@ -221,41 +229,41 @@ inline void save_text(T& self, const std::string& path) {
     if (fp) {
         fprintf(fp, "%d %d\n", self.M, self.N);
         //A1
-        for (int i = 0; i < self.N; ++i) {
-            for (int j = 0; j < self.N; ++j) {
-                float val = self.A1(i, j);
+        for (auto& it_x : self.A1.data) {
+            for (auto& it_y : it_x.second) {
+                float val = it_y.second;
                 if (val != 0.0f) {
-                    fprintf(fp, "A %d %d %f\n", i, j, val);
+                    fprintf(fp, "A %d %d %f\n", it_x.first, it_y.first, val);
                 }
             }
         }
         //A2
-        for (int i = 0; i < self.N; ++i) {
-            for (int j = 0; j < self.N; ++j) {
-                for (int k = 0; k < self.N; ++k) {
-                    float val = self.A2(i, j, k);
+        for (auto& it_x : self.A2.data) {
+            for (auto& it_y : it_x.second) {
+                for (auto& it_z : it_y.second) {
+                    float val = it_z.second;
                     if (val != 0.0f) {
-                        fprintf(fp, "a %d %d %d %f\n", i, j, k, val);
+                        fprintf(fp, "a %d %d %d %f\n", it_x.first, it_y.first, it_z.first, val);
                     }
                 }
             }
         }
         //B1
-        for (int i = 0; i < self.N; ++i) {
-            for (int j = 0; j < self.M; ++j) {
-                float val = self.B1(i, j);
+        for (auto& it_x : self.B1.data) {
+            for (auto& it_y : it_x.second) {
+                float val = it_y.second;
                 if (val != 0.0f) {
-                    fprintf(fp, "B %d %d %f\n", i, j, val);
+                    fprintf(fp, "B %d %d %f\n", it_x.first, it_y.first, val);
                 }
             }
         }
         //B2
-        for (int i = 0; i < self.N; ++i) {
-            for (int j = 0; j < self.N; ++j) {
-                for (int k = 0; k < self.M; ++k) {
-                    float val = self.B2(i, j, k);
+        for (auto& it_x : self.B2.data) {
+            for (auto& it_y : it_x.second) {
+                for (auto& it_z : it_y.second) {
+                    float val = it_z.second;
                     if (val != 0.0f) {
-                        fprintf(fp, "b %d %d %d %f\n", i, j, k, val);
+                        fprintf(fp, "b %d %d %d %f\n", it_x.first, it_y.first, it_z.first, val);
                     }
                 }
             }
