@@ -1,4 +1,4 @@
-CC = g++ -I/usr/include/x86_64-linux-gnu/qt5 -fcoroutines -fPIC -std=c++20 -ggdb -I../chcpy ../chcpy/cJSON.c
+CC = g++ -fcoroutines -fPIC -std=c++20 -ggdb -I../chcpy ../chcpy/cJSON.c
 all:listBuilder hmm_train dict_builder chordtime_builder bayes_train 
 
 listBuilder:listBuilder.cpp
