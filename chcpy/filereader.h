@@ -6,8 +6,11 @@
 namespace midiSearch {
 
 //逐行读取
-inline generator<std::string*> lineReader(const std::string& path) {
+inline generator<std::string*> lineReader(std::string path) {
     std::ifstream infile(path);
+    if (!infile) {
+        printf("fail to open:%s\n", path.c_str());
+    }
     music res;
     std::string line;
     while (std::getline(infile, line)) {
@@ -28,7 +31,7 @@ inline void str2melody(const chcpy::string& str, melody_t& melody) {
 
 inline void str2chord(const chcpy::string& ostr, chord_t& chords) {
     chcpy::string str = ostr;
-    auto chord_str_array = str.mid(2, str.size() - 4).replace("],","").split("[");
+    auto chord_str_array = str.mid(2, str.size() - 4).replace("],", "").split("[");
     for (auto it : chord_str_array) {
         chcpy::stringlist arr = it.split(",");
         std::vector<int> chord;
@@ -43,7 +46,7 @@ inline void str2chord(const chcpy::string& ostr, chord_t& chords) {
 }
 
 //3列的文件读取器（协程），返回值：music对象
-inline generator<std::tuple<music, std::string*> > musicReader_3colume(const std::string& path) {
+inline generator<std::tuple<music, std::string*> > musicReader_3colume(std::string path) {
     music res;
     for (auto buf : lineReader(path)) {
         try {
@@ -74,7 +77,7 @@ inline generator<std::tuple<music, std::string*> > musicReader_3colume(const std
 }
 
 //2列的文件读取器（协程），返回值：旋律
-inline generator<melody_t> musicReader_2colume(const std::string& path) {
+inline generator<melody_t> musicReader_2colume(std::string path) {
     music res;
     for (auto buf : lineReader(path)) {
         try {

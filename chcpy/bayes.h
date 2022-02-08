@@ -9,9 +9,13 @@ namespace chcpy::bayes {
 
 template <int probnum = 5>
 struct bayes_predict_t {
-    std::array<std::map<int, std::map<int, float>>, probnum> prob;
+    std::array<std::map<int, std::map<int, float>>, probnum> prob{};
 
-    inline std::map<int, float> getProb(const std::array<int, probnum>& input) {
+    inline std::map<int, float> getProb(const std::array<int, probnum>& input) const {
+#ifdef CHCPY_DEBUF
+        clock_t startTime, endTime;
+        startTime = clock();  //计时开始
+#endif
         bool first = true;
 
         //双缓冲
@@ -28,11 +32,21 @@ struct bayes_predict_t {
                     *res = prob_it->second;
                 } else {
                     res_back->clear();
-                    for (auto p : prob_it->second) {
-                        //取交集
-                        auto it = res->find(p.first);
-                        if (it != res->end()) {
-                            (*res_back)[p.first] = p.second * it->second;
+                    if (prob_it->second.size() > res->size()) {
+                        for (auto p : *res) {
+                            //取交集
+                            auto it = prob_it->second.find(p.first);
+                            if (it != prob_it->second.end()) {
+                                (*res_back)[p.first] = p.second * it->second;
+                            }
+                        }
+                    } else {
+                        for (auto p : prob_it->second) {
+                            //取交集
+                            auto it = res->find(p.first);
+                            if (it != res->end()) {
+                                (*res_back)[p.first] = p.second * it->second;
+                            }
                         }
                     }
                     auto tmp = res_back;
@@ -42,6 +56,10 @@ struct bayes_predict_t {
                 first = false;
             }
         }
+#ifdef CHCPY_DEBUF
+        endTime = clock();  //计时结束
+        printf("\n用时%f秒\n", (float)(endTime - startTime) / CLOCKS_PER_SEC);
+#endif
         return *res;
     }
     inline void load(const char* path) {
@@ -54,8 +72,8 @@ struct bayes_predict_t {
                 bzero(buf, sizeof(buf));
                 fgets(buf, sizeof(buf), fp);
                 std::istringstream line(buf);
-                int i, j, k;
-                float v;
+                int i = -1, j = -1, k = -1;
+                float v = 0;
                 line >> i;
                 line >> j;
                 line >> k;

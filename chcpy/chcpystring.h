@@ -1,3 +1,4 @@
+#pragma once
 #include <string.h>
 #include <iostream>
 #include <sstream>
@@ -26,6 +27,9 @@ class string : public std::string {
     inline string() {}
 
     inline string(const string& s)
+        : std::string(s) {}
+
+    inline string(const std::string& s)
         : std::string(s) {}
 
     inline string(const char* s)
@@ -72,8 +76,8 @@ class string : public std::string {
         if (s.empty()) {
             return s;
         }
-        s.erase(0, s.find_first_not_of(" "));
-        s.erase(s.find_last_not_of(" ") + 1);
+        s.erase(0, s.find_first_not_of(" \t\r\n"));
+        s.erase(s.find_last_not_of(" \t\r\n") + 1);
         return s;
     }
     inline string mid(int begin, int num) const {
