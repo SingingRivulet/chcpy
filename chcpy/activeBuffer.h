@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "chcpystring.h"
+#include "search.h"
 
 namespace chcpy {
 
@@ -32,11 +33,16 @@ struct activeBuffer {
     }
     inline void pushChord(const std::vector<int>& chord) {
         std::vector<std::string> buffer;
-        for (auto it : chord) {
+        for (auto& it : chord) {
             buffer.push_back(it == 0 ? "0" : chcpy::string::number(it % 12));
         }
         auto str = join(buffer, "-");
         pushChord(str);
+    }
+    inline void pushChord(const midiSearch::chord_t& chord) {
+        for (auto& it : chord) {
+            pushChord(chord);
+        }
     }
     inline void buildRealtimeBuffer(const std::vector<std::string>& realtime,
                                     std::vector<chordtime>& res) const {

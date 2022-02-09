@@ -8,6 +8,7 @@ test/chordGen
 test/chordGen_gpu
 test/chordGenv3_gpu
 test/chordNext
+test/realtime
 tool/listBuilder
 tool/hmm_train
 tool/bayes_train
