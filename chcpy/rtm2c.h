@@ -155,10 +155,18 @@ inline midiSearch::melody_t genChord(dict_type& dict,
         //}
         //printf("\noct:%d\n", oct);
         //转换为数字
+        int lastNote = -1;
         auto arr = chord.split("-");
         for (auto& it : arr) {
             if (!it.empty()) {
-                outChord.push_back(it.toInt() + oct * 12);
+                int note = it.toInt() + oct * 12;
+                if (lastNote != -1) {
+                    while (note < lastNote) {
+                        note += 12;
+                    }
+                }
+                lastNote = note;
+                outChord.push_back(note);
             }
         }
         return outChord;
