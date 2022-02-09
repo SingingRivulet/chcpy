@@ -217,10 +217,10 @@ inline std::tuple<int, std::string, std::vector<int>, float> note2Chord(const T&
 }
 
 struct musicSection_t {
-    float weight;
-    std::string chord_name;
-    int chord_base;
-    std::vector<int> melody;
+    float weight = 0;
+    std::string chord_name{};
+    int chord_base = 0;
+    std::vector<int> melody{};
 };
 
 template <chord_map_c T>

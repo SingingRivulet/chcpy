@@ -3,6 +3,8 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "chcpystring.h"
+
 namespace chcpy {
 
 struct activeBuffer {
@@ -27,6 +29,14 @@ struct activeBuffer {
             nowChord = chord;
             nowChord_time = 1;
         }
+    }
+    inline void pushChord(const std::vector<int>& chord) {
+        std::vector<std::string> buffer;
+        for (auto it : chord) {
+            buffer.push_back(it == 0 ? "0" : chcpy::string::number(it % 12));
+        }
+        auto str = join(buffer, "-");
+        pushChord(str);
     }
     inline void buildRealtimeBuffer(const std::vector<std::string>& realtime,
                                     std::vector<chordtime>& res) const {
