@@ -1,4 +1,4 @@
-#define CHCPY_DEBUF
+#define CHCPY_DEBUG
 #include "hmmv3_gpu.h"
 #include "predict.h"
 chcpy::gpu::GPUContext context;  //gpu上下文

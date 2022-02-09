@@ -176,7 +176,7 @@ inline void predict(                 //维特比算法，获得最优切分路�
     const melody_t& seq,             //seq须先用melody2seq预处理
     std::vector<int>& best_sequence  //输出
 ) {
-#ifdef CHCPY_DEBUF
+#ifdef CHCPY_DEBUG
     clock_t startTime, endTime;
     startTime = clock();  //计时开始
 #endif
@@ -222,7 +222,7 @@ inline void predict(                 //维特比算法，获得最优切分路�
     for (int i = T - 2; i >= 0; --i) {  //这里不能用size_t，否则将导致下溢出，造成死循环
         best_sequence.at(i) = ptr.at(i + 1).at(best_sequence.at(i + 1));
     }
-#ifdef CHCPY_DEBUF
+#ifdef CHCPY_DEBUG
     endTime = clock();  //计时结束
     printf("\n用时%f秒\n", (float)(endTime - startTime) / CLOCKS_PER_SEC);
 #endif

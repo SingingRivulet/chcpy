@@ -12,6 +12,7 @@ struct rtmtc_t {
     float act = 0.5;
     float sectionWeight = 1.0;
     int times = 1;
+    int maxNoteNum = 64;
     bool updated = false;
 };
 template <typename T>
@@ -44,7 +45,7 @@ inline bool pushSection(rtmtc_type& self,
         //检测合并
         auto meg = melody2chord::merge(chord_map, self.buffer, section, self.act, self.times);
         float nowWeight = self.buffer.weight + section.weight + self.sectionWeight;
-        if (nowWeight >= meg.weight) {
+        if (nowWeight >= meg.weight && meg.melody.size() < self.maxNoteNum) {
             //合并
             self.buffer = std::move(meg);
         } else {
@@ -107,7 +108,7 @@ inline void buildRealtimeBuffer(const chord_map_t& chord_map,
                                 activeBuffer& buf,
                                 rtmtc_type& now,
                                 midiSearch::chord_t& newChord,
-                                std::vector<activeBuffer::chordtime> res) {
+                                std::vector<activeBuffer::chordtime>& res) {
     std::vector<std::string> newChord_str;
     predict::genChord(chord_map,
                       dict_melody,
@@ -122,6 +123,7 @@ inline void buildRealtimeBuffer(const chord_map_t& chord_map,
             buffer.push_back(it == 0 ? "0" : chcpy::string::number(it % 12));
         }
         auto str = join(buffer, "-");
+        //printf("%s\n", str.c_str());
         newChord_str.push_back(str);
     }
     buf.buildRealtimeBuffer(newChord_str, res);
@@ -147,6 +149,11 @@ inline midiSearch::melody_t genChord(dict_type& dict,
         if (last->size() > 0) {
             oct = std::max(last->at(0), 0) / 12;
         }
+        //printf("last:");
+        //for (auto& note : *last) {
+        //    printf("%d ", note);
+        //}
+        //printf("\noct:%d\n", oct);
         //转换为数字
         auto arr = chord.split("-");
         for (auto& it : arr) {

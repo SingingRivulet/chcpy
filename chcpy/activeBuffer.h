@@ -41,7 +41,7 @@ struct activeBuffer {
     }
     inline void pushChord(const midiSearch::chord_t& chord) {
         for (auto& it : chord) {
-            pushChord(chord);
+            pushChord(it);
         }
     }
     inline void buildRealtimeBuffer(const std::vector<std::string>& realtime,
@@ -93,6 +93,9 @@ struct activeBuffer {
             checkSize();
         }
     end:
+        //for (auto it : res) {
+        //    printf("ab:%s = %d\n", std::get<0>(it).c_str(), std::get<1>(it));
+        //}
         while (res.size() > history_max) {
             res.pop_back();
         }

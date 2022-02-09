@@ -1,4 +1,4 @@
-#define CHCPY_DEBUF
+#define CHCPY_DEBUG
 #include "chordNext.h"
 #include "bayes.h"
 int main() {

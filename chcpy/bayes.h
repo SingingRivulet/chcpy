@@ -12,7 +12,7 @@ struct bayes_predict_t {
     std::array<std::map<int, std::map<int, float>>, probnum> prob{};
 
     inline std::map<int, float> getProb(const std::array<int, probnum>& input) const {
-#ifdef CHCPY_DEBUF
+#ifdef CHCPY_DEBUG
         clock_t startTime, endTime;
         startTime = clock();  //计时开始
 #endif
@@ -56,7 +56,7 @@ struct bayes_predict_t {
                 first = false;
             }
         }
-#ifdef CHCPY_DEBUF
+#ifdef CHCPY_DEBUG
         endTime = clock();  //计时结束
         printf("\n用时%f秒\n", (float)(endTime - startTime) / CLOCKS_PER_SEC);
 #endif

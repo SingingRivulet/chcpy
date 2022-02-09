@@ -88,15 +88,21 @@ inline int predictNext(dict_type& dict,
     for (int i = 0; i < bayeslen; ++i) {
         arr[i] = -1;
     }
+#ifdef CHCPY_DEBUG
+    printf("输入数据：\n");
+#endif
     int i = 0;
     for (auto& it : res) {
+#ifdef CHCPY_DEBUG
+        printf("%s=%d\n", std::get<0>(it).c_str(), std::get<1>(it));
+#endif
         auto index = dict.getIndex(std::get<0>(it), std::get<1>(it));
         arr[i++] = index;
         if (i >= bayeslen) {
             break;
         }
     }
-#ifdef CHCPY_DEBUF
+#ifdef CHCPY_DEBUG
     printf("输入序列：\n");
     for (auto it : arr) {
         printf("%d ", it);
@@ -106,11 +112,11 @@ inline int predictNext(dict_type& dict,
     auto prob = model.getProb(arr);
     float max_value = 0;
     int max_id = -1;
-#ifdef CHCPY_DEBUF
+#ifdef CHCPY_PROB_DEBUG
     printf("概率：\n");
 #endif
     for (auto& it : prob) {
-#ifdef CHCPY_DEBUF
+#ifdef CHCPY_PROB_DEBUG
         printf("%d->%f\n", it.first, it.second);
 #endif
         if (it.second > max_value) {

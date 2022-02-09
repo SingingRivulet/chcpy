@@ -24,9 +24,12 @@ inline void genChord(chord_map_t& chord_map,      //和弦匹配表
         int noteLevel = chcpy::melody2chord::getToneLevelDelta(note, buffer.chord_base, 0);
         buffer_melody.push_back(noteLevel);
     }
+    if (minNote == 9999999) {
+        minNote = 24;  //默认值
+    }
     seq2id::melody2seq(melody_dict, buffer_melody, melody_seq);  //每四个一组
     hmm::predict(model, melody_seq, chord_id);                   //hmm预测
-#ifdef CHCPY_DEBUF
+#ifdef CHCPY_DEBUG
     printf("%d_%s(w=%f) len(seq)=%d\n",
            buffer.chord_base,
            buffer.chord_name.c_str(),
@@ -36,7 +39,7 @@ inline void genChord(chord_map_t& chord_map,      //和弦匹配表
     auto melody_it = buffer.melody.begin();
 #endif
     for (auto id : chord_id) {
-#ifdef CHCPY_DEBUF
+#ifdef CHCPY_DEBUG
         int melody_it_count = 0;
         printf("[");
         for (; (melody_it != buffer.melody.end() && ++melody_it_count <= 4); ++melody_it) {
@@ -51,11 +54,11 @@ inline void genChord(chord_map_t& chord_map,      //和弦匹配表
         int last = -1;
         std::vector<int> singleChord;
         int maxNote = -1;
-#ifdef CHCPY_DEBUF
+#ifdef CHCPY_DEBUG
         printf("[");
 #endif
         for (auto note14_str : note14s) {  //遍历
-#ifdef CHCPY_DEBUF
+#ifdef CHCPY_DEBUG
             printf("%s ", note14_str.c_str());
 #endif
             int A = note14_str.toInt();                               //A的原始值（14进制）
@@ -73,7 +76,7 @@ inline void genChord(chord_map_t& chord_map,      //和弦匹配表
         for (auto& note : singleChord) {
             note -= toneShift;
         }
-#ifdef CHCPY_DEBUF
+#ifdef CHCPY_DEBUG
         printf("]\t(");
         for (auto note : singleChord) {
             printf("%d ", note);

@@ -1,4 +1,4 @@
-#define CHCPY_DEBUF
+#define CHCPY_DEBUG
 #include "predict.h"
 int main() {
     chcpy::seq2id::dict_t dict_seq;
