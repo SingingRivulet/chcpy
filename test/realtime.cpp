@@ -1,4 +1,4 @@
-//#define CHCPY_DEBUG
+#define CHCPY_DEBUG
 #include "bayes.h"
 #include "chordNext.h"
 #include "hmm_gpu.h"
@@ -32,7 +32,7 @@ int main() {
         midiSearch::melody_t melody;
         midiSearch::str2melody(line->c_str(), melody);
         for (auto note : melody) {
-            printf("音符：%d\n", note);
+            printf("输入音符：%d\n", note);
             if (chcpy::rtmtc::pushNote(rtmtc, chordmap, model_chordGen, dict_seq, dict_chord, note)) {
                 newChord.clear();
                 rtb.clear();
@@ -48,12 +48,12 @@ int main() {
                     activeBuffer, rtmtc,
                     newChord, rtb);
 
-                printf("和弦：");
                 auto chord = chcpy::rtmtc::genChord(dict_time, model_predictNext, newChord, rtb);
+                printf("\n输出和弦：");
                 for (auto& chord_note : chord) {
                     printf("%d ", chord_note);
                 }
-                printf("\n");
+                printf("\n\n");
             }
         }
     }

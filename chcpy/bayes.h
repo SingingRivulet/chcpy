@@ -9,9 +9,9 @@ namespace chcpy::bayes {
 
 template <int probnum = 5>
 struct bayes_predict_t {
-    std::array<std::map<int, std::map<int, float>>, probnum> prob{};
+    std::array<std::map<int, std::vector<std::pair<int, float>>>, probnum> prob{};
 
-    inline std::map<int, float> getProb(const std::array<int, probnum>& input) const {
+    inline std::vector<std::pair<int, float>> getProb(const std::array<int, probnum>& input) const {
 #ifdef CHCPY_DEBUG
         clock_t startTime, endTime;
         startTime = clock();  //计时开始
@@ -19,19 +19,21 @@ struct bayes_predict_t {
         bool first = true;
 
         //双缓冲
-        std::map<int, float> res_1;
-        std::map<int, float> res_2;
+        std::vector<std::pair<int, float>> res_1;
+        std::vector<std::pair<int, float>> res_2;
         auto res = &res_1;
         auto res_back = &res_2;
 
-        for (size_t i = 0; i < probnum; ++i) {
-            auto& prob_i = prob[i];
-            auto prob_it = prob_i.find(input[i]);
+        for (size_t argIndex = 0; argIndex < probnum; ++argIndex) {
+            auto& prob_i = prob[argIndex];
+            auto prob_it = prob_i.find(input[argIndex]);
             if (prob_it != prob_i.end()) {
                 if (first) {
                     *res = prob_it->second;
                 } else {
                     res_back->clear();
+                    /*
+                    * 代码性能过低，已废弃
                     if (prob_it->second.size() > res->size()) {
                         for (auto p : *res) {
                             //取交集
@@ -49,6 +51,25 @@ struct bayes_predict_t {
                             }
                         }
                     }
+                    */
+                    auto& ptr1 = prob_it->second;
+                    auto& ptr2 = *res;
+                    int len1 = ptr1.size(), len2 = ptr2.size();
+                    int i = 0, j = 0;
+                    while (i < len1 && j < len2) {
+                        if (ptr1[i].first == ptr2[j].first) {
+                            res_back->push_back(std::pair<int, float>(
+                                ptr1[i].first,
+                                ptr1[i].second * ptr2[j].second));
+                            i++;
+                            j++;
+                        } else if (ptr1[i].first > ptr2[j].first) {
+                            j++;
+                        } else {
+                            i++;
+                        }
+                    }
+
                     auto tmp = res_back;
                     res_back = res;
                     res = tmp;
@@ -79,7 +100,18 @@ struct bayes_predict_t {
                 line >> k;
                 line >> v;
                 if (i >= 0 && i < probnum) {
-                    prob.at(i)[j][k] = v;
+                    prob.at(i)[j].push_back(std::pair<int, float>(k, v));
+                }
+            }
+            for (auto& it_i : prob) {
+                for (auto& it_j : it_i) {
+                    std::sort(
+                        it_j.second.begin(),
+                        it_j.second.end(),
+                        [](const std::pair<int, float>& A,
+                           const std::pair<int, float>& B) {
+                            return A.first < B.first;
+                        });
                 }
             }
             fclose(fp);
