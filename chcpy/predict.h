@@ -48,33 +48,35 @@ inline void genChord(chord_map_t& chord_map,      //和弦匹配表
         printf("]\t");
 #endif
         //转换为和弦
-        auto chord14 = chord2id::get(chord_dict, id);              //搜索
-        auto note14s = chcpy::string(chord14.c_str()).split("-");  //分割
-        int B = buffer.chord_base;                                 //片段根音
-        int last = -1;
+        auto chord14 = chord2id::get(chord_dict, id);  //搜索
         std::vector<int> singleChord;
-        int maxNote = -1;
 #ifdef CHCPY_DEBUG
         printf("[");
 #endif
-        for (auto note14_str : note14s) {  //遍历
+        if (chord14 != "null") {
+            auto note14s = chcpy::string(chord14.c_str()).split("-");  //分割
+            int B = buffer.chord_base;                                 //片段根音
+            int last = -1;
+            int maxNote = -1;
+            for (auto note14_str : note14s) {  //遍历
 #ifdef CHCPY_DEBUG
-            printf("%s ", note14_str.c_str());
+                printf("%s ", note14_str.c_str());
 #endif
-            int A = note14_str.toInt();                               //A的原始值（14进制）
-            int tone = melody2chord::getToneFromLevelDelta(A, B, 0);  //实际音阶（12平均律）
-            while (tone < last) {
-                tone += 12;
+                int A = note14_str.toInt();                               //A的原始值（14进制）
+                int tone = melody2chord::getToneFromLevelDelta(A, B, 0);  //实际音阶（12平均律）
+                while (tone < last) {
+                    tone += 12;
+                }
+                last = tone;
+                if (maxNote < tone) {
+                    maxNote = tone;
+                }
+                singleChord.push_back(tone);
             }
-            last = tone;
-            if (maxNote < tone) {
-                maxNote = tone;
+            int toneShift = (1 + (maxNote - minNote) / 12) * 12;
+            for (auto& note : singleChord) {
+                note -= toneShift;
             }
-            singleChord.push_back(tone);
-        }
-        int toneShift = (1 + (maxNote - minNote) / 12) * 12;
-        for (auto& note : singleChord) {
-            note -= toneShift;
         }
 #ifdef CHCPY_DEBUG
         printf("]\t(");

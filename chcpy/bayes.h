@@ -79,7 +79,7 @@ struct bayes_predict_t {
         }
 #ifdef CHCPY_DEBUG
         endTime = clock();  //计时结束
-        printf("\n用时%f秒\n", (float)(endTime - startTime) / CLOCKS_PER_SEC);
+        printf("\nbayes用时%f秒\n", (float)(endTime - startTime) / CLOCKS_PER_SEC);
 #endif
         return *res;
     }

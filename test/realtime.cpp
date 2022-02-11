@@ -48,7 +48,10 @@ int main() {
                     activeBuffer, rtmtc,
                     newChord, rtb);
 
-                auto chord = chcpy::rtmtc::genChord(dict_time, model_predictNext, newChord, rtb);
+                auto chord = chcpy::rtmtc::genChord(
+                    dict_time,
+                    model_predictNext,
+                    rtmtc.lastChord, rtmtc.octave, rtb);
                 printf("\n输出和弦：");
                 for (auto& chord_note : chord) {
                     printf("%d ", chord_note);

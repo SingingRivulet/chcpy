@@ -309,7 +309,7 @@ inline void predict(                 //维特比算法，获得最优切分路�
     }
 #ifdef CHCPY_DEBUG
     endTime = clock();  //计时结束
-    printf("\n用时%f秒\n", (float)(endTime - startTime) / CLOCKS_PER_SEC);
+    printf("\nhmm用时%f秒\n", (float)(endTime - startTime) / CLOCKS_PER_SEC);
 #endif
 }
 

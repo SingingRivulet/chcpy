@@ -117,6 +117,9 @@ class string : public std::string {
 
 template <class S, class T>
 inline std::string join(std::vector<T>& elems, S& delim) {
+    if (elems.empty()) {
+        return std::string();
+    }
     std::stringstream ss;
     typename std::vector<T>::iterator e = elems.begin();
     ss << *e++;
