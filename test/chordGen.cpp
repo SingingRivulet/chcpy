@@ -10,12 +10,34 @@ int main() {
     chcpy::chord2id::load(dict_chord, "../data/chorddict.txt");
     chcpy::hmm::load_text(model, "../data/model");
 
-    midiSearch::chord_t chord;
+    midiSearch::chord_t chords;
+    auto fp = fopen("../outputs/chordGen/output.txt", "w");
     for (auto line : midiSearch::lineReader("test.txt")) {
         midiSearch::melody_t melody;
         midiSearch::str2melody(line->c_str(), melody);
-        chcpy::predict::gen(chordmap, dict_seq, dict_chord, model, melody, chord);
+        chcpy::predict::gen(chordmap, dict_seq, dict_chord, model, melody, chords);
         printf("=========================================================\n");
+        if (fp) {
+            chcpy::stringlist melody_strlist, chords_strlist;
+            for (auto& it : melody) {
+                melody_strlist.push_back(chcpy::string::number(it));
+            }
+            fprintf(fp, "[%s]|[", chcpy::join(melody_strlist, ",").c_str());
+            for (auto& ch : chords) {
+                chcpy::stringlist chord_list;
+                for (auto& it : ch) {
+                    chord_list.push_back(chcpy::string::number(it));
+                }
+                chords_strlist.push_back(
+                    chcpy::string("[") +
+                    chcpy::join(chord_list, ",") +
+                    chcpy::string("]"));
+            }
+            fprintf(fp, "%s]\n", chcpy::join(chords_strlist, ",").c_str());
+        }
+    }
+    if (fp) {
+        fclose(fp);
     }
     return 0;
 }

@@ -28,8 +28,12 @@ int main() {
 
     midiSearch::chord_t newChord;
     std::vector<chcpy::activeBuffer::chordtime> rtb;
+
+    auto fp = fopen("../outputs/realtime/output.txt", "w");
     for (auto line : midiSearch::lineReader("test.txt")) {
         midiSearch::melody_t melody;
+        midiSearch::chord_t chords;
+        chords.push_back(melody);
         midiSearch::str2melody(line->c_str(), melody);
         for (auto note : melody) {
             printf("输入音符：%d\n", note);
@@ -52,6 +56,7 @@ int main() {
                     dict_time,
                     model_predictNext,
                     rtmtc.lastChord, rtmtc.octave, rtb);
+                chords.push_back(chord);
                 printf("\n输出和弦：");
                 for (auto& chord_note : chord) {
                     printf("%d ", chord_note);
@@ -59,6 +64,27 @@ int main() {
                 printf("\n\n");
             }
         }
+        if (fp) {
+            chcpy::stringlist melody_strlist, chords_strlist;
+            for (auto& it : melody) {
+                melody_strlist.push_back(chcpy::string::number(it));
+            }
+            fprintf(fp, "[%s]|[", chcpy::join(melody_strlist, ",").c_str());
+            for (auto& ch : chords) {
+                chcpy::stringlist chord_list;
+                for (auto& it : ch) {
+                    chord_list.push_back(chcpy::string::number(it));
+                }
+                chords_strlist.push_back(
+                    chcpy::string("[") +
+                    chcpy::join(chord_list, ",") +
+                    chcpy::string("]"));
+            }
+            fprintf(fp, "%s]\n", chcpy::join(chords_strlist, ",").c_str());
+        }
+    }
+    if (fp) {
+        fclose(fp);
     }
 
     return 0;
