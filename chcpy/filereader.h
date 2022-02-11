@@ -46,7 +46,7 @@ inline void str2chord(const chcpy::string& ostr, chord_t& chords) {
 }
 
 //3列的文件读取器（协程），返回值：music对象
-inline generator<std::tuple<music, std::string*> > musicReader_3colume(std::string path) {
+inline generator<std::tuple<music, std::string*>> musicReader_3colume(std::string path) {
     music res;
     for (auto buf : lineReader(path)) {
         try {
@@ -77,7 +77,7 @@ inline generator<std::tuple<music, std::string*> > musicReader_3colume(std::stri
 }
 
 //2列的文件读取器（协程），返回值：旋律
-inline generator<melody_t> musicReader_2colume(std::string path) {
+inline generator<std::tuple<melody_t, chord_t>> musicReader_2colume(std::string path) {
     music res;
     for (auto buf : lineReader(path)) {
         try {
@@ -85,13 +85,17 @@ inline generator<melody_t> musicReader_2colume(std::string path) {
             chcpy::string line = buf->c_str();
             auto line_array = line.simplified().split("|");
             auto notes_str = line_array.at(0);
+            auto chord_str = line_array.at(1);
 
             //旋律
             melody_t melody;
             str2melody(notes_str, melody);
 
+            chord_t chords;
+            str2chord(chord_str, chords);
+
             //切换协程
-            co_yield melody;
+            co_yield std::tuple<melody_t, chord_t>(melody, chords);
         } catch (...) {
         }
     }
