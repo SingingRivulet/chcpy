@@ -18,6 +18,7 @@ struct rtmtc_t {
     int octave = 0;
     int historyOctave = 0;
     bool updated = false;
+    bool fixEmpty = false;
 };
 template <typename T>
 concept rtmtc_c = requires(T a) {
@@ -32,6 +33,7 @@ concept rtmtc_c = requires(T a) {
     a.historyOctave;
     a.lastChord;
     a.historyEndChord;
+    a.fixEmpty;
 };
 
 inline int getEndChord(const midiSearch::chord_t& chord, midiSearch::melody_t& outChord) {
@@ -78,7 +80,8 @@ inline bool pushSection(rtmtc_type& self,
                                   dict_chord,
                                   model,
                                   self.buffer,
-                                  self.chord);
+                                  self.chord,
+                                  self.fixEmpty);
                 midiSearch::melody_t lastChord;
                 int octave = getEndChord(self.chord, lastChord);
                 if (octave > 0) {
@@ -144,7 +147,8 @@ inline void buildRealtimeBuffer(const chord_map_t& chord_map,
                       dict_chord,
                       model,
                       now.buffer,
-                      newChord);
+                      newChord,
+                      now.fixEmpty);
 
     midiSearch::melody_t lastChord;
     now.octave = now.historyOctave;

@@ -13,7 +13,8 @@ inline void genChord(chord_map_t& chord_map,      //和弦匹配表
                      chord_dict_t& chord_dict,    //和弦字典
                      model_t& model,
                      const melody2chord::musicSection_t& buffer,
-                     midiSearch::chord_t& chord) {
+                     midiSearch::chord_t& chord,
+                     bool fixEmpty = true) {
     seq2id::melody_t buffer_melody, melody_seq;
     std::vector<int> chord_id;
     int minNote = 9999999;
@@ -61,7 +62,7 @@ inline void genChord(chord_map_t& chord_map,      //和弦匹配表
 #ifdef CHCPY_DEBUG
         printf("[");
 #endif
-        if (id != idnull || fail) {
+        if (id != idnull || (fail && fixEmpty)) {
             chcpy::stringlist note14s;
             if (fail) {  //hmm失效，回退到申克分析
                 note14s = {"0", "4", "8"};
