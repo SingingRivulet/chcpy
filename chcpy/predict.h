@@ -38,6 +38,14 @@ inline void genChord(chord_map_t& chord_map,      //和弦匹配表
     printf("旋律\t\t模型输出\t实际结果\n");
     auto melody_it = buffer.melody.begin();
 #endif
+    const int idnull = chord2id::get(chord_dict, "null");
+    bool fail = true;
+    for (auto id : chord_id) {
+        if (id != idnull) {
+            fail = false;
+            break;
+        }
+    }
     for (auto id : chord_id) {
 #ifdef CHCPY_DEBUG
         int melody_it_count = 0;
@@ -53,9 +61,14 @@ inline void genChord(chord_map_t& chord_map,      //和弦匹配表
 #ifdef CHCPY_DEBUG
         printf("[");
 #endif
-        if (chord14 != "null") {
-            auto note14s = chcpy::string(chord14.c_str()).split("-");  //分割
-            int B = buffer.chord_base;                                 //片段根音
+        if (id != idnull || fail) {
+            chcpy::stringlist note14s;
+            if (fail) {  //hmm失效，回退到申克分析
+                note14s = {"0", "4", "8"};
+            } else {
+                note14s = chcpy::string(chord14.c_str()).split("-");  //分割
+            }
+            int B = buffer.chord_base;  //片段根音
             int last = -1;
             int maxNote = -1;
             for (auto note14_str : note14s) {  //遍历
