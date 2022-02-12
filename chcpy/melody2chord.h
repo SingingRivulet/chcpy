@@ -1,8 +1,10 @@
 #pragma once
+#include <omp.h>
 #include <string.h>
 #include <functional>
 #include <list>
 #include <map>
+#include <mutex>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -20,9 +22,9 @@ inline void getComp(                                                            
     }
     //开始求组合
     int len = notes.size();
-    std::vector<std::tuple<int, float>> res;
+#pragma omp parallel for
     for (int i = 0; i < len; ++i) {
-        res.clear();
+        std::vector<std::tuple<int, float>> res{};
         float compCount = 0;
         for (int j = i; j < len; ++j) {
             auto it = notes.at(j);
@@ -166,6 +168,7 @@ inline std::tuple<int, std::string, float> note2Chord(const T& self, const std::
     std::string min_chord;
     float min_base;
     float min_chord_weight;
+    std::mutex locker;
     bool first = true;
     getComp(notes, [&](const std::vector<std::tuple<int, float>>& n, float baseWeight) {
         std::vector<std::tuple<int, float>> relative;
@@ -188,12 +191,14 @@ inline std::tuple<int, std::string, float> note2Chord(const T& self, const std::
 #ifdef MGNR_DEBUG
             printf("=>%f(%f)\n", weight, baseWeight);
 #endif
+            locker.lock();
             if (first || weight < min_chord_weight) {
                 min_chord_weight = weight;
                 min_chord = it.first;
                 min_base = std::get<0>(n.at(0));
             }
             first = false;
+            locker.unlock();
         }
     });
     return std::make_tuple(min_base, min_chord, min_chord_weight);

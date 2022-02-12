@@ -4,6 +4,8 @@
 void buildMidi(const char* dir, const char* sample) {
     int index = 0;
     char midi_name[256];
+    int longChord = 0;
+    int chordCount = 0;
     for (auto data : midiSearch::musicReader_2colume(sample)) {
         snprintf(midi_name, sizeof(midi_name), "%s/%d.mid", dir, ++index);
         auto melody = std::get<0>(data);
@@ -21,7 +23,7 @@ void buildMidi(const char* dir, const char* sample) {
         int lastNoteStart = 0;
         for (auto& key : melody) {
             if (key != lastNote) {
-                if (lastNote != 0) {
+                if (lastNote > 0) {
                     midifile.addNoteOn(1, lastNoteStart * 24, 0, lastNote, 90);
                     midifile.addNoteOff(1, tm * 24, 0, lastNote);
                 }
@@ -39,15 +41,18 @@ void buildMidi(const char* dir, const char* sample) {
         midiSearch::melody_t lastChord;
         int lastChordStart = 0;
         for (auto& chord : chords) {
+            if (chord == lastChord) {
+                ++longChord;
+            }
             if (chord != lastChord || tm % 4 == 0) {
                 if (!lastChord.empty()) {
                     for (auto it : lastChord) {
-                        if (it != 0) {
+                        if (it > 0) {
                             midifile.addNoteOn(2, lastChordStart * 96, 0, it, 90);
                         }
                     }
                     for (auto it : lastChord) {
-                        if (it != 0) {
+                        if (it > 0) {
                             midifile.addNoteOff(2, tm * 96, 0, it);
                         }
                     }
@@ -55,22 +60,27 @@ void buildMidi(const char* dir, const char* sample) {
                 lastChord = chord;
                 lastChordStart = tm;
             }
+            ++chordCount;
             ++tm;
         }
         if (!lastChord.empty()) {
             for (auto it : lastChord) {
-                if (it != 0) {
+                if (it > 0) {
                     midifile.addNoteOn(2, lastChordStart * 96, 0, it, 90);
                 }
             }
             for (auto it : lastChord) {
-                if (it != 0) {
+                if (it > 0) {
                     midifile.addNoteOff(2, tm * 96, 0, it);
                 }
             }
         }
         midifile.write(midi_name);
     }
+    printf("%s:longchord:%d/%d(%f)\n",
+           sample,
+           longChord, chordCount,
+           (float)longChord / (float)chordCount);
 }
 int main() {
     buildMidi("../outputs/realtime/midi", "../outputs/realtime/output.txt");
