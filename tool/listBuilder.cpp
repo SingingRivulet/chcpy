@@ -20,7 +20,7 @@ void process(const char* path, const char* out) {
     std::map<std::vector<int>, std::vector<std::string> > datas;
     for (auto music : midiSearch::musicReader_3colume(path)) {
         auto m = std::get<0>(music);
-        printf("%s\n", m.name.c_str());
+        printf("%s melody:%d chord:%d\n", m.name.c_str(), m.melody.size(), m.chord.size());
         std::vector<int>& notes = m.melody;
         auto res = chcpy::melody2chord::getMusicSection(chordmap, notes, 4, 0.5, 1.0);
         int index = 0;
@@ -36,6 +36,8 @@ void process(const char* path, const char* out) {
                         auto chord = m.chord.at(index / 4);
                         buffer_chord.push_back(buildChordStr(chord, it.chord_base, 0));
                     } catch (...) {
+                        printf("err:%d\n", index);
+                        buffer_chord.push_back(buildChordStr({}, it.chord_base, 0));
                     }
                 }
                 ++index;

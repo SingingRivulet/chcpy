@@ -35,18 +35,19 @@ class string : public std::string {
     inline string(const char* s)
         : std::string(s) {}
 
-    inline stringlist split(const std::string& delims) const {
-        stringlist elems;
-        char* tok;
-        char cchars[this->size() + 1];
-        char* cstr = &cchars[0];
-        strcpy(cstr, this->c_str());
-        tok = strtok(cstr, delims.c_str());
-        while (tok != NULL) {
-            elems.push_back(tok);
-            tok = strtok(NULL, delims.c_str());
+    inline stringlist split(const std::string& seprate) const {
+        const auto& s = *this;
+        stringlist ret;
+        int seprate_len = seprate.length();
+        int start = 0;
+        int index;
+        while ((index = s.find(seprate, start)) != -1) {
+            ret.push_back(s.substr(start, index - start));
+            start = index + seprate_len;
         }
-        return elems;
+        if (start < s.length())
+            ret.push_back(s.substr(start, s.length() - start));
+        return ret;
     }
     inline stringlist split(const char delim) const {
         stringlist elems;

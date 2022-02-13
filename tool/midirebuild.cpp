@@ -85,5 +85,7 @@ void buildMidi(const char* dir, const char* sample) {
 int main() {
     buildMidi("../outputs/realtime/midi", "../outputs/realtime/output.txt");
     buildMidi("../outputs/chordGen/midi", "../outputs/chordGen/output.txt");
+    buildMidi("../outputs/chordNext/midi", "../outputs/chordNext/output.txt");
+    buildMidi("../outputs/ori/midi", "../test/test2.txt");
     return 0;
 }

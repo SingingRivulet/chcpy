@@ -5,34 +5,42 @@ int main() {
     chcpy::chord2id::dict_t chord_dic;
     for (auto data : midiSearch::lineReader("../data/1.list")) {
         chcpy::string line = data->c_str();
-        auto kv = line.split("|");
-        auto melody_str = kv.at(0).trimmed().split(" ");
-        auto chord = kv.at(1).trimmed().split(" ");
-        chcpy::seq2id::melody_t melody, melody_vec;
-        for (auto& it : chord) {
-            chcpy::chord2id::add(chord_dic, it);
-        }
-        for (auto& it : melody_str) {
-            melody.push_back(it.toInt());
-        }
-        for (auto seq : chcpy::seq2id::melody2seq(melody)) {
-            chcpy::seq2id::add(seq_dic, *seq);
+        try {
+            auto kv = line.split("|");
+            auto melody_str = kv.at(0).trimmed().split(" ");
+            auto chord = kv.at(1).trimmed().split(" ");
+            chcpy::seq2id::melody_t melody, melody_vec;
+            for (auto& it : chord) {
+                chcpy::chord2id::add(chord_dic, it);
+            }
+            for (auto& it : melody_str) {
+                melody.push_back(it.toInt());
+            }
+            for (auto seq : chcpy::seq2id::melody2seq(melody)) {
+                chcpy::seq2id::add(seq_dic, *seq);
+            }
+        } catch (...) {
+            printf("err:%s\n", data->c_str());
         }
     }
     for (auto data : midiSearch::lineReader("../data/2.list")) {
-        chcpy::string line = data->c_str();
-        auto kv = line.split("|");
-        auto melody_str = kv.at(0).trimmed().split(" ");
-        auto chord = kv.at(1).trimmed().split(" ");
-        chcpy::seq2id::melody_t melody, melody_vec;
-        for (auto& it : chord) {
-            chcpy::chord2id::add(chord_dic, it);
-        }
-        for (auto& it : melody_str) {
-            melody.push_back(it.toInt());
-        }
-        for (auto seq : chcpy::seq2id::melody2seq(melody)) {
-            chcpy::seq2id::add(seq_dic, *seq);
+        try {
+            chcpy::string line = data->c_str();
+            auto kv = line.split("|");
+            auto melody_str = kv.at(0).trimmed().split(" ");
+            auto chord = kv.at(1).trimmed().split(" ");
+            chcpy::seq2id::melody_t melody, melody_vec;
+            for (auto& it : chord) {
+                chcpy::chord2id::add(chord_dic, it);
+            }
+            for (auto& it : melody_str) {
+                melody.push_back(it.toInt());
+            }
+            for (auto seq : chcpy::seq2id::melody2seq(melody)) {
+                chcpy::seq2id::add(seq_dic, *seq);
+            }
+        } catch (...) {
+            printf("err:%s\n", data->c_str());
         }
     }
     chcpy::seq2id::save(seq_dic, "../data/melodydict.txt");

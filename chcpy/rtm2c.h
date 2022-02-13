@@ -173,33 +173,37 @@ inline void buildRealtimeBuffer(const chord_map_t& chord_map,
     buf.buildRealtimeBuffer(newChord_str, res);
 }
 
+inline midiSearch::melody_t str2chord(const chcpy::string& chord, int oct) {
+    midiSearch::melody_t outChord;
+    int lastNote = -1;
+    auto arr = chord.split("-");
+    for (auto& it : arr) {
+        if (!it.empty()) {
+            int note = it.toInt() + oct * 12;
+            if (lastNote != -1) {
+                while (note < lastNote) {
+                    note += 12;
+                }
+            }
+            lastNote = note;
+            outChord.push_back(note);
+        }
+    }
+    return outChord;
+}
+
 template <int bayeslen = 5, chcpy::chordNext::dict_c dict_type>
 inline midiSearch::melody_t genChord(dict_type& dict,
                                      bayes::bayes_predict_t<bayeslen>& model,
                                      const midiSearch::melody_t& lastChord,
                                      int oct,
                                      const std::vector<activeBuffer::chordtime>& res) {
-    midiSearch::melody_t outChord;
     auto max_id = chcpy::chordNext::predictNext(dict, model, res);
     auto it = dict.id_chord.find(max_id);
     if (it != dict.id_chord.end()) {
         string chord = std::get<0>(it->second);
         //转换为数字
-        int lastNote = -1;
-        auto arr = chord.split("-");
-        for (auto& it : arr) {
-            if (!it.empty()) {
-                int note = it.toInt() + oct * 12;
-                if (lastNote != -1) {
-                    while (note < lastNote) {
-                        note += 12;
-                    }
-                }
-                lastNote = note;
-                outChord.push_back(note);
-            }
-        }
-        return outChord;
+        return str2chord(chord, oct);
     } else {
         return lastChord;
     }
