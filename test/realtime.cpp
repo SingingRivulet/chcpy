@@ -33,7 +33,7 @@ int main() {
     for (auto line : midiSearch::lineReader("test.txt")) {
         midiSearch::melody_t melody;
         midiSearch::chord_t chords;
-        chords.push_back(melody);
+        chords.push_back(melody);  //此时melody是空的，节省资源
         midiSearch::str2melody(line->c_str(), melody);
         for (auto note : melody) {
             printf("输入音符：%d\n", note);
