@@ -23,5 +23,14 @@ dict_builder:dict_builder.cpp
 chordtime_builder:chordtime_builder.cpp
 	$(CC) chordtime_builder.cpp -o chordtime_builder
 
+dataset_check:dataset_check.cpp
+	$(CC) dataset_check.cpp -o dataset_check
+
+lenMax:lenMax.cpp
+	$(CC) lenMax.cpp -o lenMax
+
+sampleConvert:sampleConvert.cpp
+	$(CC) sampleConvert.cpp -o sampleConvert
+
 clean:
 	-rm listBuilder hmm_train dict_builder hmmv3_train chordtime_builder bayes_train midirebuild

@@ -22,5 +22,11 @@ chordGen_gpu:chordGen_gpu.cpp
 chordGenv3_gpu:chordGenv3_gpu.cpp
 	$(CC) chordGenv3_gpu.cpp -lGLESv2 -lEGL -fopenmp -o chordGenv3_gpu
 
+simpleHMM:simpleHMM.cpp
+	$(CC) simpleHMM.cpp -lGLESv2 -lEGL -fopenmp -o simpleHMM
+
+simpleHMM_train:simpleHMM_train.cpp
+	$(CC) simpleHMM_train.cpp -lGLESv2 -lEGL -fopenmp -o simpleHMM_train
+
 clean:
 	-rm chordGen chordGen.out calcEditDist chordGenv3_gpu chordGen_gpu chordNext realtime tone

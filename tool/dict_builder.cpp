@@ -3,6 +3,21 @@
 int main() {
     chcpy::seq2id::dict_t seq_dic;
     chcpy::chord2id::dict_t chord_dic;
+    chcpy::seq2id::dict_t seq_dic_simple;
+    chcpy::chord2id::dict_t chord_dic_simple;
+    for (auto data : midiSearch::musicReader_3colume("../data/3.txt")) {
+        auto& m = std::get<0>(data);
+        for (auto it : m.melody) {
+            chcpy::seq2id::add(seq_dic_simple, std::vector<int>({it}));
+        }
+        for (auto& it : m.chord) {
+            std::vector<chcpy::string> arr;
+            for (auto n : it) {
+                arr.push_back(chcpy::string::number(n));
+            }
+            chcpy::chord2id::add(chord_dic_simple, chcpy::join(arr, "-"));
+        }
+    }
     for (auto data : midiSearch::lineReader("../data/1.list")) {
         chcpy::string line = data->c_str();
         try {
@@ -45,5 +60,7 @@ int main() {
     }
     chcpy::seq2id::save(seq_dic, "../data/melodydict.txt");
     chcpy::chord2id::save(chord_dic, "../data/chorddict.txt");
+    chcpy::seq2id::save(seq_dic_simple, "../data/melodydict_simple.txt");
+    chcpy::chord2id::save(chord_dic_simple, "../data/chorddict_simple.txt");
     return 0;
 }

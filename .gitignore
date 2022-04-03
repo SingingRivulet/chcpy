@@ -3,6 +3,7 @@ data/
 *.out
 *.gch
 tmp/
+/outputs
 test/calcEditDist
 test/chordGen
 test/chordGen_gpu
