@@ -65,9 +65,33 @@ void convert(const char* out, const char* sample, bool shiftChord) {
         fclose(fp_melody);
     }
 }
-
+void convertMelody(const char* out, const char* sample) {
+    midiSearch::melody_t melody;
+    for (auto data : midiSearch::lineReader(sample)) {
+        chcpy::string d(*data);
+        auto arr = d.trimmed().split("|");
+        if (arr.size() >= 1) {
+            midiSearch::melody_t m;
+            midiSearch::str2melody(arr.at(0), m);
+            for (auto it : m) {
+                melody.push_back(it);
+            }
+        }
+    }
+    chcpy::stringlist melody_strlist, chords_strlist;
+    for (auto& it : melody) {
+        melody_strlist.push_back(chcpy::string::number(it));
+    }
+    auto melody_str = chcpy::join(melody_strlist, ",");
+    auto fp_melody = fopen(out, "w");
+    if (fp_melody) {
+        fprintf(fp_melody, "[%s]\n", melody_str.c_str());
+        fclose(fp_melody);
+    }
+}
 int main() {
-    convert("../outputs/sampleConvert/shift", "../outputs/sampleConvert/1.txt", true);
-    convert("../outputs/sampleConvert/noshift", "../outputs/sampleConvert/1.txt", false);
+    //convert("../outputs/sampleConvert/shift", "../outputs/sampleConvert/1.txt", true);
+    //convert("../outputs/sampleConvert/noshift", "../outputs/sampleConvert/1.txt", false);
+    convertMelody("../outputs/sampleConvert/melody.txt","../outputs/sampleConvert/2.txt");
     return 0;
 }

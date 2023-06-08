@@ -45,7 +45,7 @@ class string : public std::string {
             ret.push_back(s.substr(start, index - start));
             start = index + seprate_len;
         }
-        if (start < s.length())
+        if (start <= s.length())
             ret.push_back(s.substr(start, s.length() - start));
         return ret;
     }

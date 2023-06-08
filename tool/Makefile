@@ -5,6 +5,18 @@ midirebuild:midirebuild.cpp
 	$(CC) midirebuild.cpp ../dep/midifile/lib/libmidifile.a \
 	 -I ../dep/midifile/include -o midirebuild
 
+tone:tone.cpp
+	$(CC) tone.cpp ../dep/midifile/lib/libmidifile.a \
+	 -I ../dep/midifile/include -o tone
+
+mutone:mutone.cpp
+	$(CC) mutone.cpp ../dep/midifile/lib/libmidifile.a \
+	 -I ../dep/midifile/include -o mutone
+
+checkChord:checkChord.cpp
+	$(CC) checkChord.cpp ../dep/midifile/lib/libmidifile.a \
+	 -I ../dep/midifile/include -o checkChord
+
 listBuilder:listBuilder.cpp
 	$(CC) listBuilder.cpp -o listBuilder
 
@@ -31,6 +43,21 @@ lenMax:lenMax.cpp
 
 sampleConvert:sampleConvert.cpp
 	$(CC) sampleConvert.cpp -o sampleConvert
+
+sampScore:sampScore.cpp
+	$(CC) sampScore.cpp -o sampScore
+
+chordPlayer:chordPlayer.cpp
+	cd ../dep/lua-cjson/ && gcc fpconv.c -c -I ../lua/
+	cd ../dep/lua-cjson/ && gcc lua_cjson.c -c -I ../lua/
+	cd ../dep/lua-cjson/ && gcc strbuf.c -c -I ../lua/
+	$(CC) chordPlayer.cpp -o chordPlayer \
+	 ../dep/midifile/lib/libmidifile.a \
+	 -I ../dep/midifile/include \
+	 -I ../dep/lua/ ../dep/lua/src/liblua.a \
+    ../dep/lua-cjson/fpconv.o \
+    ../dep/lua-cjson/lua_cjson.o \
+    ../dep/lua-cjson/strbuf.o -ldl
 
 clean:
 	-rm listBuilder hmm_train dict_builder hmmv3_train chordtime_builder bayes_train midirebuild

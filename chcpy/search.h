@@ -11,6 +11,7 @@
 namespace midiSearch {
 
 using melody_t = std::vector<int>;
+using mu_melody_t = std::vector<melody_t>;
 using chord_t = std::vector<std::vector<int> >;
 
 struct music {

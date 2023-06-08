@@ -133,7 +133,7 @@ inline auto getToneFromLen(
 }
 
 struct melodyChunk_t {
-    midiSearch::melody_t melody{};
+    midiSearch::mu_melody_t melody{};
     std::array<float, 12> count{};
     double weight = 0;
     double aweight = 0;  //权重乘长度
@@ -144,18 +144,28 @@ inline void initMelodyChunk(const tonemap_t& self, melodyChunk_t& res) {
     for (auto& it : res.count) {
         it = 0;
     }
-    for (auto note : res.melody) {
-        if (note != 0) {
-            res.count[note % 12] += 1;
+    int gcount = 0;
+    for (auto& notes : res.melody) {
+        for (auto& note : notes) {
+            if (note != 0) {
+                res.count[note % 12] += 1;
+                gcount += 1;
+            }
         }
     }
-    auto w = chcpy::tone::getToneFromLen(self, res.count);
-    res.tone = &self[std::get<0>(w)];
-    res.weight = std::get<1>(w);
-    res.aweight = res.weight * res.melody.size();
+    if (gcount == 0) {  //没有音符
+        res.tone = nullptr;
+        res.weight = 999999;
+        res.aweight = res.weight * res.melody.size();
+    } else {
+        auto w = chcpy::tone::getToneFromLen(self, res.count);
+        res.tone = &self[std::get<0>(w)];
+        res.weight = std::get<1>(w);
+        res.aweight = res.weight * res.melody.size();
+    }
 }
 
-inline auto buildMelodyChunk(const tonemap_t& self, const midiSearch::melody_t& melody) {
+inline auto buildMelodyChunk(const tonemap_t& self, const midiSearch::mu_melody_t& melody) {
     melodyChunk_t res;
     res.melody = melody;
     initMelodyChunk(self, res);
@@ -252,10 +262,10 @@ inline void getToneSection(const tonemap_t& tone_map,
 }
 
 inline auto getToneSection(const tonemap_t& tone_map,
-                           const std::vector<int>& melody,
+                           const midiSearch::mu_melody_t& melody,
                            int sectionCount = 4,
                            int minSectionLen = 16) {
-    std::vector<int> tmp;
+    midiSearch::mu_melody_t tmp;
     std::list<melodyChunk_t> arr;
     for (auto it : melody) {
         if (tmp.size() >= sectionCount) {

@@ -22,7 +22,7 @@ inline generator<std::string*> lineReader(std::string path) {
 }
 
 inline void str2melody(const chcpy::string& str, melody_t& melody) {
-    auto notes_arr = str.replace("[", "").replace("]", "").split(",");
+    auto notes_arr = str.replace(" ", "").replace("[", "").replace("]", "").split(",");
     for (auto it : notes_arr) {
         int note = it.toInt();
         melody.push_back(note);
@@ -31,7 +31,7 @@ inline void str2melody(const chcpy::string& str, melody_t& melody) {
 
 inline void str2chord(const chcpy::string& ostr, chord_t& chords) {
     chcpy::string str = ostr;
-    auto chord_str_array = str.mid(2, str.size() - 4).replace("],", "").split("[");
+    auto chord_str_array = str.mid(2, str.size() - 4).split("],[");
     for (auto it : chord_str_array) {
         chcpy::stringlist arr = it.split(",");
         std::vector<int> chord;
